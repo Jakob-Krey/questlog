@@ -4,9 +4,8 @@ import { useLive, useNow } from '../lib/hooks';
 import { reportError } from '../lib/notify';
 import { behindMs, paceStatus, totalsByQuest, weeklyRatio, type Pace } from '../lib/stats';
 import { startQuestTimer, stopRunningTimer } from '../lib/timerActions';
-import { daysLeftInWeek, formatDuration, formatHours, periodLabel, periodRange } from '../lib/time';
+import { formatDuration, formatHours, periodRange } from '../lib/time';
 import type { ActiveTimer, Quest, Session } from '../lib/types';
-import Icon from './Icon';
 import Loading from './Loading';
 import Shell, { type PageProps } from './Shell';
 
@@ -37,14 +36,9 @@ function Overview({ uid, timer }: PageProps) {
   const paused = quests.filter((q) => q.status === 'paused' && q.id !== timer?.questId);
   const archived = quests.filter((q) => q.status === 'archived' && q.id !== timer?.questId);
 
-  const active = cards.filter((q) => q.status === 'active');
-  const target = active.reduce((sum, q) => sum + q.weeklyHours, 0);
-  const actual = active.reduce((sum, q) => sum + (totals.get(q.id) ?? 0), 0);
-  const isWeekend = (new Date(now).getDay() + 6) % 7 >= 4; // Fr–So
-
   return (
     <>
-      <WeekHeader now={now} actualMs={actual} targetHours={target} />
+      <h1 class="sr-only">Quests</h1>
 
       {cards.length === 0 ? (
         quests.length === 0 ? (
@@ -70,15 +64,6 @@ function Overview({ uid, timer }: PageProps) {
               />
             ))}
           </div>
-          {isWeekend && (
-            <a class="reflect-link" href="/reflexion">
-              <span>
-                <strong>Wochenreflexion</strong>
-                <span class="muted"> · Wie lief die Woche für deine Quests?</span>
-              </span>
-              <Icon name="chevron-right" />
-            </a>
-          )}
           <NewQuest uid={uid} />
         </>
       )}
@@ -86,28 +71,6 @@ function Overview({ uid, timer }: PageProps) {
       {paused.length > 0 && <QuestLinks title="Pausiert" quests={paused} />}
       {archived.length > 0 && <QuestLinks title="Archiviert" quests={archived} />}
     </>
-  );
-}
-
-export function WeekHeader({ now, actualMs, targetHours }: { now: number; actualMs: number; targetHours: number }) {
-  const left = daysLeftInWeek(now);
-  const ratio = weeklyRatio(actualMs, targetHours);
-  return (
-    <div class="week-head">
-      <div>
-        <h1>Diese Woche</h1>
-        <p class="muted week-meta">
-          {periodLabel('week', now)} · {left === 1 ? 'letzter Tag' : `noch ${left} Tage`}
-        </p>
-      </div>
-      {ratio !== null && (
-        <p class="week-total">
-          <span class="figure-ist">{formatDuration(actualMs)}</span>
-          <span class="muted"> von {formatHours(targetHours)}</span>
-          <span class="pct">{Math.round(ratio * 100)} %</span>
-        </p>
-      )}
-    </div>
   );
 }
 

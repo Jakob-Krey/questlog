@@ -228,8 +228,8 @@ Erscheint nur, solange ein Timer läuft, und klebt dann oben unter der Kopfzeile
 ### Quest-Karte (Signature Component)
 Name (Title, max. zwei Zeilen), SMART-Ziel einzeilig in Bleistift, dann der Zahlenanker: Ist-Stunden groß (600, 1.35rem, tabellarisch) „von“ Soll, rechts die Prozentzahl. Der Fortschrittsbalken endet bei 100 %, die Prozentzahl zählt darüber hinaus (ab 100 % in Erledigt-Grün, „Soll erfüllt“). Darunter der Stand gegen den gleichmäßigen Wochenplan („Im Plan“ / „1:59 h hinter Plan“) und der nächste offene Meilenstein. Aktion unten links: Standard-Button „Start“, bzw. „Wechseln“, wenn schon ein anderer Timer läuft; auf der laufenden Karte Danger-Button „Stopp“ mit Punkt und „läuft“. Karten sind nach Rückstand sortiert (gespeicherte Zeit, damit nichts während der Arbeit springt).
 
-### Wochenkopf
-Seitentitel „Diese Woche“, darunter in Bleistift „KW 47 · 16.11.–22.11.2026 · noch 3 Tage“; rechts die Wochensumme aller aktiven Quests im selben Zahlenanker-Stil wie auf den Karten.
+### Übersicht
+Die Übersicht zeigt bewusst nur die Quest-Karten und „+ Neue Quest“ – keinen sichtbaren Seitentitel, keinen Wochenkopf, keine Summen, keinen Reflexions-Hinweis (Entscheidung Jakob). Die Überschrift „Quests“ existiert nur für Screenreader.
 
 ### Meldungen (Toasts)
 Unten mittig, über der Tab-Leiste: dunkle Tinte-Fläche mit Papier-Text, 12px Radius, weicher Schatten (`0 6px 24px rgb(0 0 0 / 0.18)`). Bestätigungen mit unterstrichener Aktion „Rückgängig“ (8s), Fehler in Signalrot mit Lösungshinweis (10s). Ersetzt jedes `alert()`.

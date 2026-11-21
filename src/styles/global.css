@@ -358,28 +358,6 @@ header.top {
   }
 }
 
-/* ---------- Wochenkopf ---------- */
-
-.week-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 8px 24px;
-  flex-wrap: wrap;
-  margin: 8px 0 16px;
-}
-.week-head h1 {
-  margin: 0;
-}
-.week-meta {
-  margin: 2px 0 0;
-  font-size: 0.9rem;
-}
-.week-total {
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-
 .figure-ist {
   font-size: 1.35rem;
   font-weight: 600;
@@ -403,6 +381,7 @@ header.top {
 /* ---------- Quest-Karten ---------- */
 
 .cards {
+  margin-top: 8px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
@@ -495,23 +474,6 @@ header.top {
   .progress > div {
     transition: none;
   }
-}
-
-.reflect-link {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin: 16px 0 0;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  text-decoration: none;
-}
-.reflect-link:hover {
-  border-color: var(--accent);
 }
 
 .onboard p {
