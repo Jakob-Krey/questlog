@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'preact/hooks';
 import { saveReflection, watchQuests, watchReflections, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
+import { reportError } from '../lib/notify';
 import { totalsByQuest } from '../lib/stats';
 import { formatDuration, isoWeek, periodRange } from '../lib/time';
 import type { Quest, Reflection as R, Session } from '../lib/types';
+import Loading from './Loading';
 import PeriodNav from './PeriodNav';
 import Shell, { type PageProps } from './Shell';
 
@@ -20,7 +22,7 @@ function Reflection({ uid, timer }: PageProps) {
   const sessions = useLive<Session[]>((cb) => watchSessionsInRange(uid, week.from, week.to, cb), [uid, week.from]);
   const reflections = useLive<R[]>((cb) => watchReflections(uid, kw, cb), [uid, kw]);
 
-  if (!quests || !sessions || !reflections) return <p class="muted">Lädt …</p>;
+  if (!quests || !sessions || !reflections) return <Loading />;
 
   const entries = timer ? [...sessions, { questId: timer.questId, start: timer.startedAt, end: now }] : sessions;
   const totals = totalsByQuest(entries, week.from, week.to);
@@ -72,7 +74,7 @@ function ReflectionCard({ uid, quest, kw, actualMs, reflection }: CardProps) {
       class="panel stack"
       onSubmit={(e) => {
         e.preventDefault();
-        saveReflection(uid, quest.id, kw, text).catch((err) => alert(err.message ?? err));
+        saveReflection(uid, quest.id, kw, text).catch((err) => reportError(`Speichern der Reflexion „${quest.name}“`, err));
         setDirty(false);
         setSaved(true);
         setTimeout(() => setSaved(false), 1500);
@@ -98,7 +100,11 @@ function ReflectionCard({ uid, quest, kw, actualMs, reflection }: CardProps) {
         <button type="submit" class="primary" disabled={!dirty}>
           Speichern
         </button>
-        {saved && <span class="muted">Gespeichert</span>}
+        {saved && (
+          <span class="muted" role="status">
+            Gespeichert
+          </span>
+        )}
       </div>
     </form>
   );

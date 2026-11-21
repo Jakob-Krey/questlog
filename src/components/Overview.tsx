@@ -1,9 +1,13 @@
 import { useState } from 'preact/hooks';
-import { createQuest, startTimer, watchQuests, watchSessionsInRange } from '../lib/db';
+import { createQuest, watchQuests, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
-import { totalsByQuest, weeklyProgress } from '../lib/stats';
-import { formatDuration, periodRange } from '../lib/time';
-import type { Quest, Session } from '../lib/types';
+import { reportError } from '../lib/notify';
+import { behindMs, paceStatus, totalsByQuest, weeklyRatio, type Pace } from '../lib/stats';
+import { startQuestTimer, stopRunningTimer } from '../lib/timerActions';
+import { daysLeftInWeek, formatDuration, formatHours, periodLabel, periodRange } from '../lib/time';
+import type { ActiveTimer, Quest, Session } from '../lib/types';
+import Icon from './Icon';
+import Loading from './Loading';
 import Shell, { type PageProps } from './Shell';
 
 export default function OverviewPage() {
@@ -16,35 +20,68 @@ function Overview({ uid, timer }: PageProps) {
   const quests = useLive<Quest[]>((cb) => watchQuests(uid, cb), [uid]);
   const sessions = useLive<Session[]>((cb) => watchSessionsInRange(uid, week.from, week.to, cb), [uid, week.from]);
 
-  if (!quests || !sessions) return <p class="muted">Lädt …</p>;
+  if (!quests || !sessions) return <Loading />;
 
-  // Laufenden Timer live in den Wochenfortschritt einrechnen.
+  // Laufenden Timer live einrechnen; sortiert wird nur nach gespeicherten Sitzungen,
+  // damit Karten nicht während der Arbeit die Plätze tauschen.
+  const saved = totalsByQuest(sessions, week.from, week.to);
   const entries = timer ? [...sessions, { questId: timer.questId, start: timer.startedAt, end: now }] : sessions;
   const totals = totalsByQuest(entries, week.from, week.to);
+  const elapsed = (now - week.from) / (week.to - week.from);
 
-  const active = quests.filter((q) => q.status === 'active');
-  const paused = quests.filter((q) => q.status === 'paused');
-  const archived = quests.filter((q) => q.status === 'archived');
+  const sortKey = (q: Quest) => weeklyRatio(saved.get(q.id) ?? 0, q.weeklyHours) ?? Number.POSITIVE_INFINITY;
+  // Eine pausierte Quest mit laufendem Timer bleibt sichtbar, damit sie stoppbar ist.
+  const cards = quests
+    .filter((q) => q.status === 'active' || q.id === timer?.questId)
+    .sort((a, b) => sortKey(a) - sortKey(b));
+  const paused = quests.filter((q) => q.status === 'paused' && q.id !== timer?.questId);
+  const archived = quests.filter((q) => q.status === 'archived' && q.id !== timer?.questId);
+
+  const active = cards.filter((q) => q.status === 'active');
+  const target = active.reduce((sum, q) => sum + q.weeklyHours, 0);
+  const actual = active.reduce((sum, q) => sum + (totals.get(q.id) ?? 0), 0);
+  const isWeekend = (new Date(now).getDay() + 6) % 7 >= 4; // Fr–So
 
   return (
     <>
-      <h1>Aktive Quests</h1>
-      {active.length === 0 && <p class="muted">Noch keine aktive Quest. Leg unten deine erste an.</p>}
-      <div class="cards">
-        {active.map((q) => (
-          <QuestCard
-            key={q.id}
-            quest={q}
-            actualMs={totals.get(q.id) ?? 0}
-            running={timer?.questId === q.id}
-            onStart={() =>
-              startTimer(uid, timer, { questId: q.id, title: q.name }).catch((e) => alert(e.message ?? e))
-            }
-          />
-        ))}
-      </div>
+      <WeekHeader now={now} actualMs={actual} targetHours={target} />
 
-      <NewQuest uid={uid} />
+      {cards.length === 0 ? (
+        quests.length === 0 ? (
+          <FirstQuest uid={uid} />
+        ) : (
+          <>
+            <p class="muted">Gerade ist keine Quest aktiv. Setze eine pausierte Quest wieder auf aktiv oder leg eine neue an.</p>
+            <NewQuest uid={uid} />
+          </>
+        )
+      ) : (
+        <>
+          <div class="cards">
+            {cards.map((q) => (
+              <QuestCard
+                key={q.id}
+                quest={q}
+                actualMs={totals.get(q.id) ?? 0}
+                elapsed={elapsed}
+                timer={timer}
+                onStart={() => startQuestTimer(uid, timer, q)}
+                onStop={() => timer && stopRunningTimer(uid, timer)}
+              />
+            ))}
+          </div>
+          {isWeekend && (
+            <a class="reflect-link" href="/reflexion">
+              <span>
+                <strong>Wochenreflexion</strong>
+                <span class="muted"> · Wie lief die Woche für deine Quests?</span>
+              </span>
+              <Icon name="chevron-right" />
+            </a>
+          )}
+          <NewQuest uid={uid} />
+        </>
+      )}
 
       {paused.length > 0 && <QuestLinks title="Pausiert" quests={paused} />}
       {archived.length > 0 && <QuestLinks title="Archiviert" quests={archived} />}
@@ -52,62 +89,179 @@ function Overview({ uid, timer }: PageProps) {
   );
 }
 
-function QuestCard(props: { quest: Quest; actualMs: number; running: boolean; onStart: () => void }) {
-  const { quest, actualMs, running, onStart } = props;
-  const progress = weeklyProgress(actualMs, quest.weeklyHours);
-  const done = quest.milestones.filter((m) => m.done).length;
+export function WeekHeader({ now, actualMs, targetHours }: { now: number; actualMs: number; targetHours: number }) {
+  const left = daysLeftInWeek(now);
+  const ratio = weeklyRatio(actualMs, targetHours);
   return (
-    <article class={`card ${running ? 'is-running' : ''}`}>
-      <a href={`/quest?id=${quest.id}`} class="card-title">
+    <div class="week-head">
+      <div>
+        <h1>Diese Woche</h1>
+        <p class="muted week-meta">
+          {periodLabel('week', now)} · {left === 1 ? 'letzter Tag' : `noch ${left} Tage`}
+        </p>
+      </div>
+      {ratio !== null && (
+        <p class="week-total">
+          <span class="figure-ist">{formatDuration(actualMs)}</span>
+          <span class="muted"> von {formatHours(targetHours)}</span>
+          <span class="pct">{Math.round(ratio * 100)} %</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+const PACE_TEXT: Record<Pace, string> = { done: 'Soll erfüllt', 'on-track': 'Im Plan', behind: '' };
+
+interface CardProps {
+  quest: Quest;
+  actualMs: number;
+  elapsed: number;
+  timer: ActiveTimer | null;
+  onStart: () => void;
+  onStop: () => void;
+}
+
+export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop }: CardProps) {
+  const running = timer?.questId === quest.id;
+  const ratio = weeklyRatio(actualMs, quest.weeklyHours);
+  const pace = paceStatus(actualMs, quest.weeklyHours, elapsed);
+  const pct = ratio === null ? null : Math.round(ratio * 100);
+  const hours = formatHours(quest.weeklyHours);
+  const doneCount = quest.milestones.filter((m) => m.done).length;
+  const nextIndex = quest.milestones.findIndex((m) => !m.done);
+
+  const paceText =
+    pace === null
+      ? 'Kein Wochen-Soll'
+      : pace === 'behind'
+        ? `${formatDuration(behindMs(actualMs, quest.weeklyHours, elapsed))} hinter Plan`
+        : PACE_TEXT[pace];
+
+  return (
+    <article class={`card${running ? ' is-running' : ''}`}>
+      <a href={`/quest?id=${quest.id}`} class="card-title" title={quest.name}>
         {quest.name}
       </a>
-      {quest.goal && <p class="goal">{quest.goal}</p>}
-      <div class="progress" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
-        <div style={{ width: `${progress * 100}%` }} />
+      {quest.goal && (
+        <p class="goal" title={quest.goal}>
+          {quest.goal}
+        </p>
+      )}
+
+      <div class="card-figures">
+        {actualMs > 0 ? (
+          <p class="figure">
+            <span class="figure-ist">{formatDuration(actualMs)}</span>
+            {ratio !== null && <span class="muted"> von {hours}</span>}
+          </p>
+        ) : (
+          <p class="figure muted">Noch nichts diese Woche{ratio !== null && ` · Soll ${hours}`}</p>
+        )}
+        {pct !== null && <span class={`pct pace-${pace}`}>{pct} %</span>}
       </div>
-      <p class="meta">
-        {formatDuration(actualMs)} von {quest.weeklyHours} h diese Woche
-        {quest.milestones.length > 0 && ` · Meilensteine ${done}/${quest.milestones.length}`}
-      </p>
-      <button class={running ? '' : 'primary'} disabled={running} onClick={onStart}>
-        {running ? 'Läuft …' : 'Start'}
-      </button>
+
+      {ratio !== null && (
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label={`${quest.name}: Wochenfortschritt`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.min(100, pct ?? 0)}
+          aria-valuetext={`${formatDuration(actualMs)} von ${hours}, ${pct} %`}
+        >
+          <div style={{ width: `${Math.min(1, ratio) * 100}%` }} />
+        </div>
+      )}
+
+      <p class={`meta pace-${pace}`}>{paceText}</p>
+      {quest.milestones.length > 0 && (
+        <p class="meta next-milestone" title={nextIndex >= 0 ? quest.milestones[nextIndex].text : undefined}>
+          {nextIndex >= 0
+            ? `Meilenstein ${doneCount + 1}/${quest.milestones.length}: ${quest.milestones[nextIndex].text}`
+            : quest.milestones.length === 1
+              ? 'Meilenstein erledigt'
+              : `Alle ${quest.milestones.length} Meilensteine erledigt`}
+        </p>
+      )}
+
+      <div class="card-actions">
+        {running ? (
+          <>
+            <button class="danger" onClick={onStop}>
+              Stopp
+            </button>
+            <span class="running-label">
+              <span class="dot" aria-hidden="true" />
+              läuft
+            </span>
+          </>
+        ) : (
+          <button onClick={onStart} aria-label={`${timer ? 'Wechseln zu' : 'Start'} ${quest.name}`}>
+            {timer ? 'Wechseln' : 'Start'}
+          </button>
+        )}
+      </div>
     </article>
+  );
+}
+
+export function FirstQuest({ uid }: { uid: string }) {
+  return (
+    <section class="panel onboard">
+      <h2>Leg deine erste Quest an</h2>
+      <p>
+        Eine Quest ist ein großes Vorhaben ohne Enddatum – ein Studienabschnitt, ein Kundenprojekt, ein persönliches
+        Ziel. Du legst fest, wie viele Stunden pro Woche du hineinstecken willst, und siehst hier jede Woche Ist gegen
+        Soll.
+      </p>
+      <QuestForm uid={uid} />
+    </section>
   );
 }
 
 function NewQuest({ uid }: { uid: string }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [goal, setGoal] = useState('');
-  const [hours, setHours] = useState('5');
-
   if (!open)
     return (
       <p>
         <button onClick={() => setOpen(true)}>+ Neue Quest</button>
       </p>
     );
+  return (
+    <section class="panel">
+      <h2>Neue Quest</h2>
+      <QuestForm uid={uid} onDone={() => setOpen(false)} />
+    </section>
+  );
+}
+
+function QuestForm({ uid, onDone }: { uid: string; onDone?: () => void }) {
+  const [name, setName] = useState('');
+  const [goal, setGoal] = useState('');
+  const [hours, setHours] = useState('5');
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <form
-      class="panel stack"
+      class="stack"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!name.trim()) return;
-        // Nicht sofort wegnavigieren: Der Schreibvorgang soll erst im lokalen Cache landen.
-        createQuest(uid, {
-          name: name.trim(),
-          goal: goal.trim(),
-          weeklyHours: Math.max(0, Number(hours) || 0),
-        });
+        const weeklyHours = Number(hours.replace(',', '.'));
+        if (!name.trim()) return setError('Bitte gib der Quest einen Namen.');
+        if (!(weeklyHours > 0)) return setError('Bitte ein Wochen-Soll über 0 Stunden angeben.');
+        // Lokal sofort sichtbar (auch offline); scheitert der Server, gibt es eine Meldung.
+        createQuest(uid, { name: name.trim(), goal: goal.trim(), weeklyHours }).saved.catch((err) =>
+          reportError(`Anlegen von „${name.trim()}“`, err),
+        );
         setName('');
         setGoal('');
         setHours('5');
-        setOpen(false);
+        setError(null);
+        onDone?.();
       }}
     >
-      <h2>Neue Quest</h2>
       <label>
         Name
         <input required value={name} onInput={(e) => setName(e.currentTarget.value)} placeholder="z. B. Masterarbeit" />
@@ -122,16 +276,31 @@ function NewQuest({ uid }: { uid: string }) {
         />
       </label>
       <label>
-        Wochenstunden (Soll)
-        <input type="number" min={0} step={0.5} value={hours} onInput={(e) => setHours(e.currentTarget.value)} />
+        Wochen-Soll in Stunden
+        <input
+          type="number"
+          required
+          min={0.5}
+          step={0.5}
+          inputMode="decimal"
+          value={hours}
+          onInput={(e) => setHours(e.currentTarget.value)}
+        />
       </label>
+      {error && (
+        <p class="error" role="alert">
+          {error}
+        </p>
+      )}
       <div class="row">
         <button type="submit" class="primary">
-          Anlegen
+          Quest anlegen
         </button>
-        <button type="button" class="link" onClick={() => setOpen(false)}>
-          Abbrechen
-        </button>
+        {onDone && (
+          <button type="button" class="link" onClick={onDone}>
+            Abbrechen
+          </button>
+        )}
       </div>
     </form>
   );

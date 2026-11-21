@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'preact/hooks';
-import { startTimer, updateQuest, watchQuest, watchQuestSessions } from '../lib/db';
+import { updateQuest, watchQuest, watchQuestSessions } from '../lib/db';
 import { useLive } from '../lib/hooks';
+import { reportError } from '../lib/notify';
+import { startQuestTimer, stopRunningTimer } from '../lib/timerActions';
 import { formatDuration } from '../lib/time';
 import { STATUS_LABEL, type Milestone, type Quest, type QuestStatus, type Session } from '../lib/types';
+import Icon from './Icon';
+import Loading from './Loading';
 import Shell, { type PageProps } from './Shell';
 
 export default function QuestDetailPage() {
@@ -14,7 +18,7 @@ function QuestDetail({ uid, timer }: PageProps) {
   const quest = useLive<Quest | null>((cb) => watchQuest(uid, id, cb), [uid, id]);
   const sessions = useLive<Session[]>((cb) => watchQuestSessions(uid, id, 20, cb), [uid, id]);
 
-  if (quest === undefined) return <p class="muted">Lädt …</p>;
+  if (quest === undefined) return <Loading />;
   if (quest === null)
     return (
       <p>
@@ -27,17 +31,27 @@ function QuestDetail({ uid, timer }: PageProps) {
   return (
     <>
       <p>
-        <a href="/">← Übersicht</a>
+        <a href="/" class="back-link">
+          <Icon name="chevron-left" />
+          Übersicht
+        </a>
       </p>
       <div class="row spread">
         <h1>{quest.name}</h1>
-        <button
-          class={running ? '' : 'primary'}
-          disabled={running || quest.status === 'archived'}
-          onClick={() => startTimer(uid, timer, { questId: quest.id, title: quest.name }).catch((e) => alert(e.message ?? e))}
-        >
-          {running ? 'Läuft …' : 'Start'}
-        </button>
+        {running ? (
+          <button class="danger" onClick={() => timer && stopRunningTimer(uid, timer)}>
+            Stopp
+          </button>
+        ) : (
+          <button
+            class="primary"
+            disabled={quest.status === 'archived'}
+            title={quest.status === 'archived' ? 'Archivierte Quests lassen sich nicht starten.' : undefined}
+            onClick={() => startQuestTimer(uid, timer, quest)}
+          >
+            {timer ? 'Wechseln' : 'Start'}
+          </button>
+        )}
       </div>
 
       <QuestForm uid={uid} quest={quest} />
@@ -46,7 +60,7 @@ function QuestDetail({ uid, timer }: PageProps) {
       <section class="panel">
         <h2>Letzte Sitzungen</h2>
         {!sessions ? (
-          <p class="muted">Lädt …</p>
+          <Loading />
         ) : sessions.length === 0 ? (
           <p class="muted">Noch keine Sitzungen.</p>
         ) : (
@@ -64,7 +78,10 @@ function QuestDetail({ uid, timer }: PageProps) {
           </ul>
         )}
         <p>
-          <a href="/sitzungen">Sitzungen bearbeiten oder nachtragen →</a>
+          <a href="/sitzungen" class="icon-link">
+            Sitzungen bearbeiten oder nachtragen
+            <Icon name="chevron-right" />
+          </a>
         </p>
       </section>
     </>
@@ -77,6 +94,7 @@ function QuestForm({ uid, quest }: { uid: string; quest: Quest }) {
   const [hours, setHours] = useState(String(quest.weeklyHours));
   const [status, setStatus] = useState<QuestStatus>(quest.status);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Änderungen von anderen Geräten übernehmen.
   useEffect(() => {
@@ -91,13 +109,13 @@ function QuestForm({ uid, quest }: { uid: string; quest: Quest }) {
       class="panel stack"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!name.trim()) return;
-        updateQuest(uid, quest.id, {
-          name: name.trim(),
-          goal: goal.trim(),
-          weeklyHours: Math.max(0, Number(hours) || 0),
-          status,
-        }).catch((err) => alert(err.message ?? err));
+        const weeklyHours = Number(hours.replace(',', '.'));
+        if (!name.trim()) return setError('Bitte gib der Quest einen Namen.');
+        if (!(weeklyHours > 0)) return setError('Bitte ein Wochen-Soll über 0 Stunden angeben.');
+        setError(null);
+        updateQuest(uid, quest.id, { name: name.trim(), goal: goal.trim(), weeklyHours, status }).catch((err) =>
+          reportError('Speichern der Quest', err),
+        );
         setSaved(true);
         setTimeout(() => setSaved(false), 1500);
       }}
@@ -113,8 +131,16 @@ function QuestForm({ uid, quest }: { uid: string; quest: Quest }) {
       </label>
       <div class="row">
         <label>
-          Wochenstunden (Soll)
-          <input type="number" min={0} step={0.5} value={hours} onInput={(e) => setHours(e.currentTarget.value)} />
+          Wochen-Soll in Stunden
+          <input
+            type="number"
+            required
+            min={0.5}
+            step={0.5}
+            inputMode="decimal"
+            value={hours}
+            onInput={(e) => setHours(e.currentTarget.value)}
+          />
         </label>
         <label>
           Status
@@ -125,11 +151,18 @@ function QuestForm({ uid, quest }: { uid: string; quest: Quest }) {
           </select>
         </label>
       </div>
+      {error && (
+        <p class="error" role="alert">
+          {error}
+        </p>
+      )}
       <div class="row">
-        <button type="submit" class="primary">
-          Speichern
-        </button>
-        {saved && <span class="muted">Gespeichert</span>}
+        <button type="submit">Speichern</button>
+        {saved && (
+          <span class="muted" role="status">
+            Gespeichert
+          </span>
+        )}
       </div>
     </form>
   );
@@ -141,7 +174,7 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
 
   const save = (next: Milestone[]) =>
     updateQuest(uid, quest.id, { milestones: next.map((m, i) => ({ ...m, order: i })) }).catch((e) =>
-      alert(e.message ?? e),
+      reportError('Speichern der Meilensteine', e),
     );
 
   const move = (i: number, delta: number) => {
@@ -168,18 +201,31 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
               <span>{m.text}</span>
             </label>
             <span class="row tight">
-              <button class="icon" title="Nach oben" disabled={i === 0} onClick={() => move(i, -1)}>
-                ↑
+              <button
+                class="icon"
+                title="Nach oben"
+                aria-label={`„${m.text}“ nach oben`}
+                disabled={i === 0}
+                onClick={() => move(i, -1)}
+              >
+                <Icon name="arrow-up" />
               </button>
-              <button class="icon" title="Nach unten" disabled={i === list.length - 1} onClick={() => move(i, 1)}>
-                ↓
+              <button
+                class="icon"
+                title="Nach unten"
+                aria-label={`„${m.text}“ nach unten`}
+                disabled={i === list.length - 1}
+                onClick={() => move(i, 1)}
+              >
+                <Icon name="arrow-down" />
               </button>
               <button
                 class="icon"
                 title="Löschen"
+                aria-label={`„${m.text}“ löschen`}
                 onClick={() => confirm(`„${m.text}“ löschen?`) && save(list.filter((x) => x.id !== m.id))}
               >
-                ✕
+                <Icon name="x" />
               </button>
             </span>
           </li>

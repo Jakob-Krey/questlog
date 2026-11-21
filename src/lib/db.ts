@@ -70,17 +70,23 @@ export function watchQuest(uid: string, id: string, cb: (quest: Quest | null) =>
   return onSnapshot(doc(questsCol(uid), id), (snap) => cb(snap.exists() ? toQuest(snap.id, snap.data()) : null));
 }
 
-/** Legt eine Quest an und gibt sofort die (lokal erzeugte) ID zurück – auch offline. */
-export function createQuest(uid: string, data: Pick<Quest, 'name' | 'goal' | 'weeklyHours'>): string {
+/**
+ * Legt eine Quest an. Die ID steht sofort fest (auch offline);
+ * `saved` meldet, ob der Server den Schreibvorgang angenommen hat.
+ */
+export function createQuest(
+  uid: string,
+  data: Pick<Quest, 'name' | 'goal' | 'weeklyHours'>,
+): { id: string; saved: Promise<void> } {
   const ref = doc(questsCol(uid));
-  setDoc(ref, {
+  const saved = setDoc(ref, {
     ...data,
     status: 'active',
     milestones: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  }).catch((e) => console.error('Quest anlegen fehlgeschlagen', e));
-  return ref.id;
+  });
+  return { id: ref.id, saved };
 }
 
 export function updateQuest(
@@ -132,6 +138,21 @@ export async function stopTimer(uid: string, current: ActiveTimer, note?: string
   const batch = writeBatch(db);
   batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, Date.now(), note));
   batch.delete(activeTimerDoc(uid));
+  await batch.commit();
+}
+
+/**
+ * Macht Stopp oder Wechsel rückgängig: Die gerade gespeicherte Sitzung wird
+ * gelöscht und der vorherige Timer läuft mit seiner ursprünglichen Startzeit weiter.
+ */
+export async function restoreTimer(uid: string, previous: ActiveTimer): Promise<void> {
+  const batch = writeBatch(db);
+  batch.delete(doc(sessionsCol(uid), timerSessionId(previous.startedAt)));
+  batch.set(activeTimerDoc(uid), {
+    questId: previous.questId,
+    title: previous.title,
+    startedAt: ts(previous.startedAt),
+  });
   await batch.commit();
 }
 

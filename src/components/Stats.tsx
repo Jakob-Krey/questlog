@@ -4,6 +4,7 @@ import { useLive, useNow } from '../lib/hooks';
 import { FREE_KEY, totalsByQuest } from '../lib/stats';
 import { formatDuration, periodRange, type PeriodKind } from '../lib/time';
 import type { Quest, Session } from '../lib/types';
+import Loading from './Loading';
 import PeriodNav from './PeriodNav';
 import Shell, { type PageProps } from './Shell';
 
@@ -25,7 +26,7 @@ function Stats({ uid, timer }: PageProps) {
   const quests = useLive<Quest[]>((cb) => watchQuests(uid, cb), [uid]);
   const sessions = useLive<Session[]>((cb) => watchSessionsInRange(uid, range.from, range.to, cb), [uid, range.from, range.to]);
 
-  if (!quests || !sessions) return <p class="muted">Lädt …</p>;
+  if (!quests || !sessions) return <Loading />;
 
   const entries = timer ? [...sessions, { questId: timer.questId, start: timer.startedAt, end: now }] : sessions;
   const totals = totalsByQuest(entries, range.from, range.to);

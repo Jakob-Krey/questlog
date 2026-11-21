@@ -1,8 +1,10 @@
 import { useState } from 'preact/hooks';
 import { deleteSession, saveSession, watchQuests, watchSessionsInRange, type SessionInput } from '../lib/db';
 import { useLive } from '../lib/hooks';
+import { reportError } from '../lib/notify';
 import { HOUR, formatDuration, fromLocalInput, overlapMs, periodRange, toLocalInput } from '../lib/time';
 import type { Quest, Session } from '../lib/types';
+import Loading from './Loading';
 import PeriodNav from './PeriodNav';
 import Shell, { type PageProps } from './Shell';
 
@@ -17,20 +19,25 @@ function Sessions({ uid }: PageProps) {
   const quests = useLive<Quest[]>((cb) => watchQuests(uid, cb), [uid]);
   const sessions = useLive<Session[]>((cb) => watchSessionsInRange(uid, week.from, week.to, cb), [uid, week.from]);
 
-  if (!quests || !sessions) return <p class="muted">Lädt …</p>;
+  if (!quests || !sessions) return <Loading />;
   const inWeek = sessions.filter((s) => overlapMs(s.start, s.end, week.from, week.to) > 0);
   const questName = (id: string | null) => (id ? quests.find((q) => q.id === id)?.name : null);
+  const firstActive = quests.find((q) => q.status === 'active') ?? quests.find((q) => q.status !== 'archived');
 
   return (
     <>
       <h1>Sitzungen</h1>
       <PeriodNav kind="week" refDate={refDate} onChange={setRefDate} />
 
-      {adding ? (
+      {!firstActive ? (
+        <p class="muted">
+          Sitzungen gehören immer zu einer Quest. <a href="/">Leg zuerst eine Quest an.</a>
+        </p>
+      ) : adding ? (
         <SessionForm
           uid={uid}
           quests={quests}
-          initial={{ questId: null, title: '', start: Date.now() - HOUR, end: Date.now() }}
+          initial={{ questId: firstActive.id, title: firstActive.name, start: Date.now() - HOUR, end: Date.now() }}
           onDone={() => setAdding(false)}
         />
       ) : (
@@ -64,7 +71,7 @@ function SessionRow({ uid, session, quests, label }: { uid: string; session: Ses
   return (
     <li>
       <span>
-        <strong>{label || 'Freier Timer'}</strong>
+        <strong>{label || 'Ohne Quest'}</strong>
         {!session.questId && <span class="badge">ohne Quest</span>}
         {session.autoStopped && <span class="badge">automatisch gestoppt</span>}
         <br />
@@ -102,6 +109,8 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
 
   // Archivierte Quests nur anbieten, wenn die Sitzung schon dazugehört.
   const options = quests.filter((q) => q.status !== 'archived' || q.id === initial.questId);
+  // Freie Timer gibt es nicht mehr; ältere Sitzungen ohne Quest bleiben bearbeitbar.
+  const legacyFree = !!id && initial.questId === null;
 
   return (
     <form
@@ -113,30 +122,31 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
         if (s === null || en === null) return setError('Bitte Start und Ende angeben.');
         if (en <= s) return setError('Das Ende muss nach dem Start liegen.');
         const quest = quests.find((q) => q.id === questId);
+        if (!quest && !legacyFree) return setError('Bitte eine Quest auswählen.');
         // Nicht auf den Server warten (offline-fähig); Fehler trotzdem melden.
         saveSession(uid, id ?? null, {
           questId: quest?.id ?? null,
-          title: quest ? quest.name : title.trim() || 'Freier Timer',
+          title: quest ? quest.name : title.trim() || 'Ohne Quest',
           start: s,
           end: en,
           note,
-        }).catch((err) => alert(err.message ?? err));
+        }).catch((err) => reportError('Speichern der Sitzung', err));
         onDone();
       }}
     >
       <label>
         Quest
-        <select value={questId} onChange={(e) => setQuestId(e.currentTarget.value)}>
-          <option value="">Ohne Quest (freier Timer)</option>
+        <select required={!legacyFree} value={questId} onChange={(e) => setQuestId(e.currentTarget.value)}>
+          {legacyFree && <option value="">Ohne Quest</option>}
           {options.map((q) => (
             <option value={q.id}>{q.name}</option>
           ))}
         </select>
       </label>
-      {!questId && (
+      {legacyFree && !questId && (
         <label>
           Titel
-          <input value={title} onInput={(e) => setTitle(e.currentTarget.value)} placeholder="Freier Timer" />
+          <input value={title} onInput={(e) => setTitle(e.currentTarget.value)} placeholder="Ohne Quest" />
         </label>
       )}
       <div class="row">
@@ -153,7 +163,11 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
         Notiz
         <input value={note} onInput={(e) => setNote(e.currentTarget.value)} />
       </label>
-      {error && <p class="error">{error}</p>}
+      {error && (
+        <p class="error" role="alert">
+          {error}
+        </p>
+      )}
       <div class="row">
         <button type="submit" class="primary">
           Speichern
@@ -167,7 +181,7 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
             class="link danger-text"
             onClick={() => {
               if (!confirm('Sitzung löschen?')) return;
-              deleteSession(uid, id).catch((err) => alert(err.message ?? err));
+              deleteSession(uid, id).catch((err) => reportError('Löschen der Sitzung', err));
               onDone();
             }}
           >

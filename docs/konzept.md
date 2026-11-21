@@ -1,6 +1,6 @@
-# Questlog – Konzept (freigegeben 2026-11-21)
+# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt)
 
-Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART-Ziele mit Meilensteinen, bewusst ohne Enddaten. Pro Quest wird Zeit gemessen; zusätzlich gibt es freie Timer ohne Quest.
+Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART-Ziele mit Meilensteinen, bewusst ohne Enddaten. Zeit wird ausschließlich pro Quest gemessen; freie Timer ohne Quest gibt es nicht (mehr).
 
 ## Akzeptanzkriterien
 
@@ -15,15 +15,15 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 
 **Timer**
 - Es läuft immer nur ein Timer. Ein neuer Start beendet den laufenden automatisch (als Sitzung gespeichert).
-- Timer für eine Quest oder frei mit eigenem Titel.
+- Timer nur für Quests. Kein freier Timer (Entscheidung 2026-11-21); ältere freie Sitzungen bleiben erhalten.
 - Laufender Timer ist live auf allen Geräten sichtbar und von jedem Gerät stoppbar.
 - Stopp speichert eine Sitzung (Start, Ende, optionale Notiz).
-- Sitzungen nachträglich bearbeiten, löschen, manuell eintragen.
+- Sitzungen nachträglich bearbeiten, löschen, manuell eintragen (neue Sitzungen immer mit Quest).
 - Vergessener Timer wird nach 8 Stunden gekappt (beim nächsten Öffnen der App; Spark-Plan hat keine Cloud Functions). Ende = Start + 8 h.
 
 **Übersicht & Auswertung**
-- Übersicht: aktive Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll) und Start-Button.
-- Auswertung: Zeit pro Quest für Woche / Monat / Quartal; freie Timer gesammelt als „Ohne Quest“.
+- Übersicht: Wochenkopf (KW, verbleibende Tage, Summe Ist vs. Soll) und aktive Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus), Stand gegen den Wochenplan und Start-/Wechseln-/Stopp-Button. Freitag bis Sonntag ein Einstieg zur Wochenreflexion.
+- Auswertung: Zeit pro Quest für Woche / Monat / Quartal; ältere freie Sitzungen erscheinen, falls vorhanden, gesammelt als „Ohne Quest“.
 
 **Wochenreflexion**
 - Pro Quest und Kalenderwoche ein kurzer Text, daneben Ist- vs. Soll-Stunden. Erneutes Speichern überschreibt.
@@ -44,7 +44,7 @@ users/{uid}
 │    milestones: [{ id, text, done, order }],
 │    todoistLabel? (optional, erst später genutzt), createdAt, updatedAt
 ├─ sessions/{sessionId}
-│    questId | null, title, start, end, note?, autoStopped
+│    questId | null (null nur bei alten freien Sitzungen), title, start, end, note?, autoStopped
 ├─ reflections/{questId}_{isoWeek}     z. B. abc123_2026-W47
 │    questId, isoWeek, text, updatedAt
 └─ state/activeTimer                    (genau ein Dokument oder keins)

@@ -2,14 +2,16 @@ import type { User } from 'firebase/auth';
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { signIn, signOut } from '../lib/firebase';
-import { useActiveTimer, useAuth } from '../lib/hooks';
+import { useActiveTimer, useAuth, useOnline } from '../lib/hooks';
 import type { ActiveTimer } from '../lib/types';
+import Loading from './Loading';
+import Notices from './Notices';
 import TimerBar from './TimerBar';
 
 export type Page = 'uebersicht' | 'sitzungen' | 'auswertung' | 'reflexion' | 'quest';
 
 const NAV: { page: Page; href: string; label: string }[] = [
-  { page: 'uebersicht', href: '/', label: 'Quests' },
+  { page: 'uebersicht', href: '/', label: 'Übersicht' },
   { page: 'sitzungen', href: '/sitzungen', label: 'Sitzungen' },
   { page: 'auswertung', href: '/auswertung', label: 'Auswertung' },
   { page: 'reflexion', href: '/reflexion', label: 'Reflexion' },
@@ -27,7 +29,7 @@ interface Props {
 
 export default function Shell({ page, children }: Props) {
   const user = useAuth();
-  if (user === undefined) return <p class="muted center">Lädt …</p>;
+  if (user === undefined) return <Loading center />;
   if (user === null) return <Login />;
   return <SignedIn user={user} page={page} children={children} />;
 }
@@ -37,8 +39,16 @@ function Login() {
   return (
     <main class="login">
       <h1>Questlog</h1>
-      <p class="muted">Zeit für deine Ziele erfassen.</p>
-      <button class="primary" onClick={() => signIn().catch((e) => setError(String(e?.message ?? e)))}>
+      <p class="muted">Zeit für deine großen Ziele erfassen.</p>
+      <button
+        class="primary"
+        onClick={() =>
+          signIn().catch((e) => {
+            console.error(e);
+            setError('Anmeldung hat nicht geklappt. Bitte erneut versuchen.');
+          })
+        }
+      >
         Mit Google anmelden
       </button>
       {error && <p class="error">{error}</p>}
@@ -48,25 +58,42 @@ function Login() {
 
 function SignedIn({ user, page, children }: { user: User } & Props) {
   const timer = useActiveTimer(user.uid);
+  const online = useOnline();
   return (
     <>
-      <header class="top">
+      <AppHeader page={page} online={online} email={user.email ?? ''} />
+      {timer && <TimerBar uid={user.uid} timer={timer} />}
+      <main>{timer === undefined ? <Loading /> : children({ uid: user.uid, timer })}</main>
+      <Notices />
+    </>
+  );
+}
+
+export function AppHeader({ page, online, email }: { page: Page; online: boolean; email: string }) {
+  // Detailseite einer Quest gehört zur Übersicht.
+  const current = page === 'quest' ? 'uebersicht' : page;
+  return (
+    <header class="top">
+      <div class="top-inner">
         <a href="/" class="brand">
           Questlog
         </a>
-        <nav>
+        <nav class="mainnav" aria-label="Hauptnavigation">
           {NAV.map((n) => (
-            <a href={n.href} class={n.page === page ? 'active' : ''}>
+            <a href={n.href} class={n.page === current ? 'active' : ''} aria-current={n.page === page ? 'page' : undefined}>
               {n.label}
             </a>
           ))}
         </nav>
-        <button class="link" onClick={() => signOut()} title={user.email ?? ''}>
+        {!online && (
+          <span class="offline-pill" role="status">
+            Offline<span class="pill-detail"> – wird synchronisiert</span>
+          </span>
+        )}
+        <button class="link signout" onClick={() => signOut()} title={email}>
           Abmelden
         </button>
-      </header>
-      {timer !== undefined && <TimerBar uid={user.uid} timer={timer} />}
-      <main>{timer === undefined ? <p class="muted">Lädt …</p> : children({ uid: user.uid, timer })}</main>
-    </>
+      </div>
+    </header>
   );
 }

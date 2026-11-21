@@ -18,7 +18,14 @@ Questlog: persönliches Zeittracking (Quests mit Timer) als PWA. Freigegebene Ak
 
 ## Changelog
 
-- Nach jeder abgeschlossenen Änderung oder am Ende einer Aufgabe einen Eintrag in CHANGELOG.md anhängen.
-- Format: "## YYYY-MM-DD HH:MM – Kurztitel", darunter 2–4 Stichpunkte: was geändert wurde, welche Dateien, offene Punkte.
-- Die Datei NIE lesen oder komplett neu schreiben, sondern nur per Bash anhängen, z. B. mit cat >> CHANGELOG.md <<'EOF' ... EOF.
-- Kurz und sachlich halten, keine Code-Ausschnitte.
+- Nach jeder abgeschlossenen Aufgabe einen Eintrag in CHANGELOG.md anhängen, nur per Bash (cat >> CHANGELOG.md <<'EOF' ... EOF). Die Datei nie komplett lesen oder neu schreiben.
+- Format: "## YYYY-MM-DD HH:MM – Kurztitel", darunter 2–4 Stichpunkte: was geändert wurde, welche Dateien, bei Entscheidungen kurz das Warum.
+- Jeder Eintrag endet mit "Offen:" und listet den aktuellen Gesamtstand aller offenen technischen Punkte. Erledigtes aus früheren Einträgen fällt dort weg.
+- Beim Start einer neuen Sitzung oder nach /clear nur die letzten Einträge lesen (tail -30 CHANGELOG.md), um den Stand zu kennen.
+- Keine TODO.md anlegen.
+
+## Aufgaben für mich (Todoist)
+
+- Wenn ich selbst etwas erledigen muss (z. B. Secrets anlegen, Rollen vergeben, Kunden etwas fragen), schlage mir die Aufgaben am Ende als kurze Liste vor: Titel, kurze Beschreibung, ggf. Fälligkeit.
+- Erst nach meiner ausdrücklichen Freigabe in Todoist im Projekt "Questlog" anlegen. Ohne Freigabe nichts eintragen.
+- Bereits erledigte Aufgaben, die du in Todoist findest, nur nach Rückfrage abhaken.

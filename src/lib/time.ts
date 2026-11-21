@@ -65,8 +65,9 @@ export function periodLabel(kind: PeriodKind, ref: Date | number): string {
   const f = new Date(from);
   if (kind === 'week') {
     const last = new Date(to - DAY);
-    const fmt = (x: Date) => x.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-    return `KW ${isoWeek(f).slice(6)} · ${fmt(f)}–${fmt(last)}.${last.getFullYear()}`;
+    // toLocaleDateString liefert je nach Engine "16.11." oder "16.11" – Punkt selbst setzen.
+    const fmt = (x: Date) => `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')}.`;
+    return `KW ${isoWeek(f).slice(6)} · ${fmt(f)}–${fmt(last)}${last.getFullYear()}`;
   }
   if (kind === 'month') return f.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
   return `Q${Math.floor(f.getMonth() / 3) + 1} ${f.getFullYear()}`;
@@ -108,4 +109,14 @@ export function fromLocalInput(value: string): number | null {
   if (!value) return null;
   const t = new Date(value).getTime();
   return Number.isNaN(t) ? null : t;
+}
+
+/** "5 h", "2,5 h" für Stunden-Sollwerte. */
+export function formatHours(hours: number): string {
+  return `${hours.toLocaleString('de-DE', { maximumFractionDigits: 2 })} h`;
+}
+
+/** Verbleibende Kalendertage der laufenden Woche inkl. heute (So = 1). */
+export function daysLeftInWeek(now: number): number {
+  return 7 - ((new Date(now).getDay() + 6) % 7);
 }

@@ -45,3 +45,19 @@ export function useActiveTimer(uid: string): ActiveTimer | null | undefined {
   }, [uid, timer?.startedAt]);
   return timer;
 }
+
+/** Online-Status des Geräts (Firestore schreibt offline in den lokalen Cache). */
+export function useOnline(): boolean {
+  const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    addEventListener('online', on);
+    addEventListener('offline', off);
+    return () => {
+      removeEventListener('online', on);
+      removeEventListener('offline', off);
+    };
+  }, []);
+  return online;
+}

@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T18:14:27+00:00",
+  "title": "Design System: Questlog",
+  "extensions": {
+    "colorMeta": {
+      "waldgruen": {
+        "role": "primary",
+        "displayName": "Waldgrün",
+        "canonical": "#2f5d50",
+        "tonalRamp": [
+          "#0f201b",
+          "#1a3730",
+          "#25493f",
+          "#2f5d50",
+          "#4a7d6f",
+          "#6fb39f",
+          "#a9d3c6",
+          "#e4eeea"
+        ]
+      },
+      "waldgruen-hell": {
+        "role": "primary",
+        "displayName": "Waldgrün hell",
+        "canonical": "#e4eeea",
+        "tonalRamp": [
+          "#24332e",
+          "#3a4f48",
+          "#5a756c",
+          "#81a096",
+          "#a9c5bb",
+          "#c8dbd4",
+          "#dae8e3",
+          "#e4eeea"
+        ]
+      },
+      "papier": {
+        "role": "neutral",
+        "displayName": "Papier",
+        "canonical": "#f7f6f3",
+        "tonalRamp": [
+          "#17171a",
+          "#2b2a28",
+          "#4a4844",
+          "#6e6b65",
+          "#9a968e",
+          "#c6c2ba",
+          "#e3e1dc",
+          "#f7f6f3"
+        ]
+      },
+      "blatt": {
+        "role": "neutral",
+        "displayName": "Blatt",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#212125",
+          "#3a3a3f",
+          "#5a5a60",
+          "#808086",
+          "#a7a7ac",
+          "#cdcdd1",
+          "#ececef",
+          "#ffffff"
+        ]
+      },
+      "tinte": {
+        "role": "neutral",
+        "displayName": "Tinte",
+        "canonical": "#1d1d1f",
+        "tonalRamp": [
+          "#1d1d1f",
+          "#323235",
+          "#4a4a4e",
+          "#6b6b70",
+          "#8e8e93",
+          "#b2b2b6",
+          "#d6d6d9",
+          "#ececef"
+        ]
+      },
+      "bleistift": {
+        "role": "neutral",
+        "displayName": "Bleistift",
+        "canonical": "#6b6b70",
+        "tonalRamp": [
+          "#232325",
+          "#38383b",
+          "#505054",
+          "#6b6b70",
+          "#86868b",
+          "#9a9aa2",
+          "#c3c3c8",
+          "#e6e6e9"
+        ]
+      },
+      "linie": {
+        "role": "neutral",
+        "displayName": "Linie",
+        "canonical": "#e3e1dc",
+        "tonalRamp": [
+          "#1f1e1c",
+          "#34343a",
+          "#57554f",
+          "#7d7a73",
+          "#a3a099",
+          "#c6c3bc",
+          "#e3e1dc",
+          "#f4f3f0"
+        ]
+      },
+      "signalrot": {
+        "role": "error",
+        "displayName": "Signalrot",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "#3b0c09",
+          "#5f1510",
+          "#8a1d16",
+          "#b3261e",
+          "#d4544b",
+          "#f08b84",
+          "#f7bdb9",
+          "#fce8e6"
+        ]
+      },
+      "erledigt-gruen": {
+        "role": "success",
+        "displayName": "Erledigt-Grün",
+        "canonical": "#2f7d4f",
+        "tonalRamp": [
+          "#0e2717",
+          "#174126",
+          "#225d38",
+          "#2f7d4f",
+          "#4fa070",
+          "#7fcf9c",
+          "#b5e5c6",
+          "#e6f6ec"
+        ]
+      },
+      "waldgruen-nacht": {
+        "role": "primary",
+        "displayName": "Waldgrün (Dunkelmodus)",
+        "canonical": "#6fb39f",
+        "tonalRamp": [
+          "#0f201b",
+          "#1a3730",
+          "#25493f",
+          "#2f5d50",
+          "#4a7d6f",
+          "#6fb39f",
+          "#a9d3c6",
+          "#e4eeea"
+        ]
+      },
+      "waldgruen-hell-nacht": {
+        "role": "primary",
+        "displayName": "Waldgrün hell (Dunkelmodus)",
+        "canonical": "#24332e",
+        "tonalRamp": [
+          "#24332e",
+          "#3a4f48",
+          "#5a756c",
+          "#81a096",
+          "#a9c5bb",
+          "#c8dbd4",
+          "#dae8e3",
+          "#e4eeea"
+        ]
+      },
+      "papier-nacht": {
+        "role": "neutral",
+        "displayName": "Papier (Dunkelmodus)",
+        "canonical": "#17171a",
+        "tonalRamp": [
+          "#17171a",
+          "#2b2a28",
+          "#4a4844",
+          "#6e6b65",
+          "#9a968e",
+          "#c6c2ba",
+          "#e3e1dc",
+          "#f7f6f3"
+        ]
+      },
+      "blatt-nacht": {
+        "role": "neutral",
+        "displayName": "Blatt (Dunkelmodus)",
+        "canonical": "#212125",
+        "tonalRamp": [
+          "#212125",
+          "#3a3a3f",
+          "#5a5a60",
+          "#808086",
+          "#a7a7ac",
+          "#cdcdd1",
+          "#ececef",
+          "#ffffff"
+        ]
+      },
+      "tinte-nacht": {
+        "role": "neutral",
+        "displayName": "Tinte (Dunkelmodus)",
+        "canonical": "#ececef",
+        "tonalRamp": [
+          "#1d1d1f",
+          "#323235",
+          "#4a4a4e",
+          "#6b6b70",
+          "#8e8e93",
+          "#b2b2b6",
+          "#d6d6d9",
+          "#ececef"
+        ]
+      },
+      "bleistift-nacht": {
+        "role": "neutral",
+        "displayName": "Bleistift (Dunkelmodus)",
+        "canonical": "#9a9aa2",
+        "tonalRamp": [
+          "#232325",
+          "#38383b",
+          "#505054",
+          "#6b6b70",
+          "#86868b",
+          "#9a9aa2",
+          "#c3c3c8",
+          "#e6e6e9"
+        ]
+      },
+      "linie-nacht": {
+        "role": "neutral",
+        "displayName": "Linie (Dunkelmodus)",
+        "canonical": "#34343a",
+        "tonalRamp": [
+          "#1f1e1c",
+          "#34343a",
+          "#57554f",
+          "#7d7a73",
+          "#a3a099",
+          "#c6c3bc",
+          "#e3e1dc",
+          "#f4f3f0"
+        ]
+      },
+      "signalrot-nacht": {
+        "role": "error",
+        "displayName": "Signalrot (Dunkelmodus)",
+        "canonical": "#f08b84",
+        "tonalRamp": [
+          "#3b0c09",
+          "#5f1510",
+          "#8a1d16",
+          "#b3261e",
+          "#d4544b",
+          "#f08b84",
+          "#f7bdb9",
+          "#fce8e6"
+        ]
+      },
+      "erledigt-gruen-nacht": {
+        "role": "success",
+        "displayName": "Erledigt-Grün (Dunkelmodus)",
+        "canonical": "#7fcf9c",
+        "tonalRamp": [
+          "#0e2717",
+          "#174126",
+          "#225d38",
+          "#2f7d4f",
+          "#4fa070",
+          "#7fcf9c",
+          "#b5e5c6",
+          "#e6f6ec"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Seitentitel, eine pro Seite."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Abschnittsüberschriften und Quest-Namen."
+      },
+      "clock": {
+        "displayName": "Clock",
+        "purpose": "Laufzeit des Timers, tabellarische Ziffern."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Fließtext, Listen, Formulare."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Feldbeschriftungen und SMART-Ziel auf Karten."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Ist/Soll-Zeile und Zähler auf Karten."
+      }
+    },
+    "shadows": [
+      {
+        "name": "laufend-ring",
+        "value": "0 0 0 1px var(--accent)",
+        "purpose": "Verdoppelt den Waldgrün-Rahmen der Karte mit laufendem Timer."
+      },
+      {
+        "name": "meldung",
+        "value": "0 6px 24px rgb(0 0 0 / 0.18)",
+        "purpose": "Toasts schweben über dem Inhalt."
+      }
+    ],
+    "motion": [
+      {
+        "name": "progress-width",
+        "value": "width 0.4s",
+        "purpose": "Fortschrittsbalken wächst sanft."
+      },
+      {
+        "name": "record-pulse",
+        "value": "opacity 1.6s infinite (50 % → 0.3)",
+        "purpose": "Aufnahmepunkt im laufenden Timer; bei reduzierter Bewegung aus."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "560px"
+      },
+      {
+        "name": "container-max",
+        "value": "880px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Die eine gefüllte Hauptaktion eines Bereichs (Start, Anlegen, Speichern).",
+      "html": "<button class=\"ds-btn-primary\">Start</button>",
+      "css": ".ds-btn-primary{font:inherit;border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap;background:var(--accent,#2f5d50);border:1px solid var(--accent,#2f5d50);color:var(--accent-text,#fff);font-weight:600}.ds-btn-primary:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}.ds-btn-primary:disabled{opacity:.5;cursor:default}"
+    },
+    {
+      "name": "Standard Button",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Neutrale Aktion auf Blatt-Fläche mit 1px Linie.",
+      "html": "<button class=\"ds-btn\">+ Neue Quest</button>",
+      "css": ".ds-btn{font:inherit;border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap;background:var(--surface,#fff);border:1px solid var(--border,#e3e1dc);color:var(--text,#1d1d1f)}.ds-btn:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Stopp und Löschen – Signalrot bedeutet nur das.",
+      "html": "<button class=\"ds-btn-danger\">Stopp</button>",
+      "css": ".ds-btn-danger{font:inherit;border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap;background:var(--warn,#b3261e);border:1px solid var(--warn,#b3261e);color:var(--warn-text,#fff);font-weight:600}.ds-btn-danger:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Nebenaktion ohne Fläche, z. B. Abbrechen.",
+      "html": "<button class=\"ds-btn-link\">Abbrechen</button>",
+      "css": ".ds-btn-link{font:inherit;border:none;background:none;color:var(--accent,#2f5d50);padding:4px 6px;cursor:pointer;border-radius:8px}.ds-btn-link:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}"
+    },
+    {
+      "name": "Eingabefeld",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Volle Breite, Bleistift-Label darüber.",
+      "html": "<label class=\"ds-field\">Name<input class=\"ds-input\" placeholder=\"z. B. Masterarbeit\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted,#6b6b70)}.ds-input{font:inherit;font-size:1rem;color:var(--text,#1d1d1f);width:100%;padding:8px 10px;border:1px solid var(--border,#e3e1dc);border-radius:8px;background:var(--surface,#fff);box-sizing:border-box}.ds-input:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Horizontale Textlinks; aktiver Punkt Waldgrün-hell hinterlegt.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link is-active\" href=\"#\">Quests</a><a class=\"ds-nav-link\" href=\"#\">Sitzungen</a><a class=\"ds-nav-link\" href=\"#\">Auswertung</a><a class=\"ds-nav-link\" href=\"#\">Reflexion</a></nav>",
+      "css": ".ds-nav{display:flex;gap:4px}.ds-nav-link{text-decoration:none;color:var(--muted,#6b6b70);padding:6px 10px;border-radius:8px;white-space:nowrap}.ds-nav-link:hover{color:var(--text,#1d1d1f)}.ds-nav-link.is-active{color:var(--text,#1d1d1f);background:var(--accent-soft,#e4eeea);font-weight:600}.ds-nav-link:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Kleine Status-Pille neben Titeln.",
+      "html": "<span class=\"ds-badge\">pausiert</span>",
+      "css": ".ds-badge{display:inline-block;font-size:.75rem;padding:1px 7px;border-radius:99px;background:var(--accent-soft,#e4eeea);color:var(--muted,#6b6b70)}"
+    },
+    {
+      "name": "Quest-Karte",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Quest mit Ziel, Zahlenanker Ist/Soll + Prozent, Fortschritt, Stand gegen Plan, nächster Meilenstein; Start als Standard-Button.",
+      "html": "<article class=\"ds-card\"><a class=\"ds-card-title\" href=\"#\">Masterarbeit</a><p class=\"ds-goal\">Kapitel 1–3 als Rohfassung, die meine Betreuerin kommentieren kann.</p><div class=\"ds-figures\"><span><span class=\"ds-ist\">3:24 h</span><span class=\"ds-muted\"> von 10 h</span></span><span class=\"ds-pct\">34 %</span></div><div class=\"ds-progress\"><div style=\"width:34%\"></div></div><p class=\"ds-meta\">3:12 h hinter Plan</p><p class=\"ds-meta\">Meilenstein 3/4: Kapitel 2 Rohfassung</p><button class=\"ds-card-btn\">Start</button></article>",
+      "css": ".ds-card{background:var(--surface,#fff);border:1px solid var(--border,#e3e1dc);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;max-width:300px;color:var(--text,#1d1d1f)}.ds-card-title{font-weight:700;font-size:1.1rem;color:inherit;text-decoration:none}.ds-goal,.ds-meta{margin:0;color:var(--muted,#6b6b70);font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-meta{font-size:.85rem}.ds-figures{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}.ds-ist{font-size:1.35rem;font-weight:600}.ds-muted{color:var(--muted,#6b6b70)}.ds-pct{font-weight:600;color:var(--muted,#6b6b70)}.ds-progress{height:8px;border-radius:99px;background:var(--accent-soft,#e4eeea);overflow:hidden}.ds-progress>div{height:100%;background:var(--accent,#2f5d50);border-radius:99px}.ds-card-btn{align-self:flex-start;font:inherit;border-radius:8px;padding:8px 14px;cursor:pointer;background:var(--surface,#fff);border:1px solid var(--border,#e3e1dc);color:inherit}.ds-card-btn:hover{border-color:var(--muted,#6b6b70)}.ds-card-btn:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}"
+    },
+    {
+      "name": "Timer-Leiste (läuft)",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Klebende Leiste mit pulsierendem Punkt, Laufzeit, Notizfeld und Stopp.",
+      "html": "<section class=\"ds-timerbar\"><div class=\"ds-timer-info\"><span class=\"ds-dot\"></span><strong>Masterarbeit</strong><span class=\"ds-clock\">1:24:07</span></div><form class=\"ds-timer-actions\" onsubmit=\"return false\"><input class=\"ds-timer-note\" placeholder=\"Notiz (optional)\"><button class=\"ds-timer-stop\">Stopp</button></form></section>",
+      "css": ".ds-timerbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 16px;background:var(--accent-soft,#e4eeea);border-bottom:1px solid var(--border,#e3e1dc);color:var(--text,#1d1d1f)}.ds-timer-info{display:flex;align-items:center;gap:10px}.ds-dot{width:10px;height:10px;border-radius:50%;background:var(--warn,#b3261e);animation:ds-pulse 1.6s infinite}@keyframes ds-pulse{50%{opacity:.3}}@media (prefers-reduced-motion:reduce){.ds-dot{animation:none}}.ds-clock{font-variant-numeric:tabular-nums;font-size:1.2rem;font-weight:600}.ds-timer-actions{display:flex;gap:8px;align-items:center}.ds-timer-note{font:inherit;padding:8px 10px;border:1px solid var(--border,#e3e1dc);border-radius:8px;background:var(--surface,#fff);color:inherit}.ds-timer-note:focus-visible,.ds-timer-stop:focus-visible{outline:2px solid var(--accent,#2f5d50);outline-offset:2px}.ds-timer-stop{font:inherit;font-weight:600;border-radius:8px;padding:8px 14px;cursor:pointer;background:var(--warn,#b3261e);border:1px solid var(--warn,#b3261e);color:var(--warn-text,#fff)}"
+    },
+    {
+      "name": "Meldung (Toast)",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Bestätigung mit Rückgängig; Fehler in Signalrot.",
+      "html": "<div class=\"ds-notice\"><span>„Spanisch B1“ gespeichert (0:42 h). Jetzt läuft „Masterarbeit“.</span><button class=\"ds-notice-action\">Rückgängig</button></div>",
+      "css": ".ds-notice{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:var(--text,#1d1d1f);color:var(--bg,#f7f6f3);font-size:.95rem;box-shadow:0 6px 24px rgb(0 0 0 / .18);max-width:520px}.ds-notice span{flex:1}.ds-notice-action{font:inherit;font-weight:600;background:none;border:none;color:inherit;text-decoration:underline;text-underline-offset:.18em;cursor:pointer}.ds-notice-action:focus-visible{outline:2px solid currentColor;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Das Feldnotizbuch",
+    "overview": "**Creative North Star: \"Das Feldnotizbuch\"**\n\nQuestlog sieht aus wie ein gut geführtes Feldnotizbuch für lange Vorhaben: warmes Papier, dunkle Tinte, feine Linien und eine einzige Farbe für das, was zählt. Die Oberfläche ist Werkzeug, nicht Bühne. Sie tritt zurück, damit Zahlen, Ziele und der laufende Timer klar lesbar bleiben – am Mac wie am Handy.\n\nDie Stimmung ist ruhig und zurückhaltend. Dekoration gibt es nicht; Farbe erscheint nur dort, wo sie etwas bedeutet: Fortschritt gegen das Wochen-Soll, der aktive Navigationspunkt, der laufende Timer, der eine Haupt-Button eines Bereichs. Die Dichte ist mittel: großzügig genug für Touch, kompakt genug, dass die Wochenübersicht ohne Scrollen erfassbar ist.\n\nKomponenten sind schlicht und präzise: dünne 1px-Linien, sanft gerundete Ecken, wenig Gewicht. Hell- und Dunkelmodus sind gleichwertig und folgen dem System.",
+    "keyCharacteristics": [
+      "Warmes Papier-Off-White als Grund, reines Weiß für Blätter (Karten, Panels, Eingaben).",
+      "Genau eine Akzentfarbe: Waldgrün.",
+      "Systemschrift, Zahlen mit fester Ziffernbreite.",
+      "Flach: Trennung über Linie und Ton, nicht über Schatten.",
+      "Vollwertiger Dunkelmodus über `prefers-color-scheme`."
+    ],
+    "rules": [
+      {
+        "name": "The One Voice Rule",
+        "body": "Waldgrün ist die einzige Akzentfarbe. Pro Bereich ist höchstens ein Button gefüllt; alles andere bleibt Papier, Tinte und Linie.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Gold Rule",
+        "body": "Gold gehört nicht zur Oberfläche. Das Gold im App-Icon (Uhrzeiger) ist kein UI-Token; die in `global.css` definierte, ungenutzte Variable `--gold` wird nicht verwendet.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Means Stop Rule",
+        "body": "Signalrot steht ausschließlich für Stoppen, Löschen und Fehler – nie für Hervorhebung.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Numbers Rule",
+        "body": "Jede Dauer, Uhrzeit und Stundenzahl steht in tabellarischen Ziffern (`font-variant-numeric: tabular-nums`) und in Tabellen rechtsbündig, damit Zahlen beim Ticken und untereinander nicht springen.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "**Do** Waldgrün als einzige Akzentfarbe verwenden und pro Bereich höchstens einen Button füllen.",
+      "**Do** Flächen über Papier/Blatt-Ton und 1px Linie trennen.",
+      "**Do** alle Zeiten und Stunden in tabellarischen Ziffern setzen, in Tabellen rechtsbündig.",
+      "**Do** Bedienelemente mit 8px und Behälter mit 12px Radius runden; Balken und Badges als Pille.",
+      "**Do** jede neue Farbe als Variable mit Hell- und Dunkelwert in `:root` anlegen.",
+      "**Do** Bewegung bei `prefers-reduced-motion: reduce` abschalten.",
+      "**Do** Fehler und Bestätigungen als Meldung unten zeigen – mit Ursache und nächstem Schritt, bei Timer-Aktionen mit „Rückgängig“."
+    ],
+    "donts": [
+      "**Don't** Gold oder eine andere zweite Akzentfarbe in die Oberfläche einbauen.",
+      "**Don't** Signalrot für Hervorhebung nutzen; es bedeutet nur Stopp, Löschen oder Fehler.",
+      "**Don't** Farbwerte direkt in Komponenten schreiben statt über die Variablen in `global.css`.",
+      "**Don't** `alert()` verwenden oder Unicode-Zeichen (← ↑ ✕) als Icons einsetzen.",
+      "**Don't** eine zweite Schriftfamilie einführen."
+    ]
+  }
+}
