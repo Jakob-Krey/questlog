@@ -1,0 +1,32 @@
+# Pull Request: testen, bauen und als Vorschau-Kanal deployen (URL erscheint im PR).
+name: Deploy (Vorschau)
+on: pull_request
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  build_and_preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: .env aus Secret schreiben
+        run: printf '%s\n' "$FIREBASE_ENV" > .env
+        env:
+          FIREBASE_ENV: ${{ secrets.FIREBASE_ENV }}
+      - run: npm test
+      - run: npm run test:rules
+      - run: npm run build
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_QUESTLOG_85F26 }}
+          projectId: questlog-85f26

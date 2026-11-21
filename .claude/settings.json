@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.message // \"Claude wartet auf dich\"' | { read -r m; osascript -e 'on run argv' -e 'display notification (item 1 of argv) with title \"Claude Code – Quest-Tracker\" sound name \"Glass\"' -e 'end run' \"$m\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

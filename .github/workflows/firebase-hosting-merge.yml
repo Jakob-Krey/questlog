@@ -1,0 +1,36 @@
+# Push auf main: testen, bauen, Firestore Rules/Indexes und Hosting live deployen.
+name: Deploy (live)
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: .env aus Secret schreiben
+        run: printf '%s\n' "$FIREBASE_ENV" > .env
+        env:
+          FIREBASE_ENV: ${{ secrets.FIREBASE_ENV }}
+      - run: npm test
+      - run: npm run test:rules
+      - run: npm run build
+      - name: Firestore Rules & Indexes deployen
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          npx firebase deploy --only firestore:rules,firestore:indexes --project questlog-85f26 --non-interactive
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_QUESTLOG_85F26 }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_QUESTLOG_85F26 }}
+          channelId: live
+          projectId: questlog-85f26
