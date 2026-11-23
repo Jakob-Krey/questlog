@@ -2,8 +2,8 @@ import { useState } from 'preact/hooks';
 import { createQuest, watchQuests, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
 import { reportError } from '../lib/notify';
-import { behindMs, paceStatus, totalsByQuest, weeklyRatio, type Pace } from '../lib/stats';
-import { startQuestTimer, stopRunningTimer } from '../lib/timerActions';
+import { behindMs, paceStatus, totalsByQuest, weeklyRatio, type Pace, withRunningTimer } from '../lib/stats';
+import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
 import { formatDuration, formatHours, periodRange } from '../lib/time';
 import type { ActiveTimer, Quest, Session } from '../lib/types';
 import Loading from './Loading';
@@ -24,7 +24,7 @@ function Overview({ uid, timer }: PageProps) {
   // Laufenden Timer live einrechnen; sortiert wird nur nach gespeicherten Sitzungen,
   // damit Karten nicht während der Arbeit die Plätze tauschen.
   const saved = totalsByQuest(sessions, week.from, week.to);
-  const entries = timer ? [...sessions, { questId: timer.questId, start: timer.startedAt, end: now }] : sessions;
+  const entries = withRunningTimer(sessions, timer, now);
   const totals = totalsByQuest(entries, week.from, week.to);
   const elapsed = (now - week.from) / (week.to - week.from);
 
@@ -61,6 +61,8 @@ function Overview({ uid, timer }: PageProps) {
                 timer={timer}
                 onStart={() => startQuestTimer(uid, timer, q)}
                 onStop={() => timer && stopRunningTimer(uid, timer)}
+                onPause={() => timer && pauseQuestTimer(uid, timer)}
+                onResume={() => timer && resumeQuestTimer(uid, timer)}
               />
             ))}
           </div>
@@ -83,10 +85,14 @@ interface CardProps {
   timer: ActiveTimer | null;
   onStart: () => void;
   onStop: () => void;
+  onPause: () => void;
+  onResume: () => void;
 }
 
-export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop }: CardProps) {
-  const running = timer?.questId === quest.id;
+export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop, onPause, onResume }: CardProps) {
+  const current = timer?.questId === quest.id;
+  const paused = current && timer?.pausedAt !== null;
+  const running = current && !paused;
   const ratio = weeklyRatio(actualMs, quest.weeklyHours);
   const pace = paceStatus(actualMs, quest.weeklyHours, elapsed);
   const pct = ratio === null ? null : Math.round(ratio * 100);
@@ -102,7 +108,7 @@ export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop }: 
         : PACE_TEXT[pace];
 
   return (
-    <article class={`card${running ? ' is-running' : ''}`}>
+    <article class={`card${running ? ' is-running' : ''}${paused ? ' is-paused' : ''}`}>
       <a href={`/quest?id=${quest.id}`} class="card-title" title={quest.name}>
         {quest.name}
       </a>
@@ -150,14 +156,17 @@ export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop }: 
       )}
 
       <div class="card-actions">
-        {running ? (
+        {current ? (
           <>
-            <button class="danger" onClick={onStop}>
+            <button onClick={paused ? onResume : onPause} aria-label={`${paused ? 'Fortsetzen' : 'Pause'}: ${quest.name}`}>
+              {paused ? 'Fortsetzen' : 'Pause'}
+            </button>
+            <button class="danger" onClick={onStop} aria-label={`Stopp: ${quest.name}`}>
               Stopp
             </button>
             <span class="running-label">
-              <span class="dot" aria-hidden="true" />
-              läuft
+              <span class={`dot${paused ? ' is-paused' : ''}`} aria-hidden="true" />
+              {paused ? 'pausiert' : 'läuft'}
             </span>
           </>
         ) : (

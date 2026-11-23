@@ -1,7 +1,7 @@
 import type { User } from 'firebase/auth';
 import type { ComponentChildren } from 'preact';
-import { useState } from 'preact/hooks';
-import { signIn, signOut } from '../lib/firebase';
+import { useEffect, useState } from 'preact/hooks';
+import { finishRedirectSignIn, signIn, signOut } from '../lib/firebase';
 import { useActiveTimer, useAuth, useOnline } from '../lib/hooks';
 import type { ActiveTimer } from '../lib/types';
 import Loading from './Loading';
@@ -36,6 +36,13 @@ export default function Shell({ page, children }: Props) {
 
 function Login() {
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    finishRedirectSignIn().catch((e) => {
+      console.error(e);
+      const code = (e as { code?: string }).code ?? 'unbekannt';
+      setError(`Anmeldung hat nicht geklappt (${code}). Bitte erneut versuchen.`);
+    });
+  }, []);
   return (
     <main class="login">
       <h1>Questlog</h1>

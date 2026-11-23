@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { updateQuest, watchQuest, watchQuestSessions } from '../lib/db';
 import { useLive } from '../lib/hooks';
 import { reportError } from '../lib/notify';
-import { startQuestTimer, stopRunningTimer } from '../lib/timerActions';
+import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
 import { formatDuration } from '../lib/time';
 import { STATUS_LABEL, type Milestone, type Quest, type QuestStatus, type Session } from '../lib/types';
 import Icon from './Icon';
@@ -26,7 +26,8 @@ function QuestDetail({ uid, timer }: PageProps) {
       </p>
     );
 
-  const running = timer?.questId === quest.id;
+  const current = timer?.questId === quest.id;
+  const paused = current && timer?.pausedAt !== null;
 
   return (
     <>
@@ -38,10 +39,17 @@ function QuestDetail({ uid, timer }: PageProps) {
       </p>
       <div class="row spread">
         <h1>{quest.name}</h1>
-        {running ? (
-          <button class="danger" onClick={() => timer && stopRunningTimer(uid, timer)}>
-            Stopp
-          </button>
+        {current ? (
+          <div class="row">
+            <button
+              onClick={() => timer && (paused ? resumeQuestTimer(uid, timer) : pauseQuestTimer(uid, timer))}
+            >
+              {paused ? 'Fortsetzen' : 'Pause'}
+            </button>
+            <button class="danger" onClick={() => timer && stopRunningTimer(uid, timer)}>
+              Stopp
+            </button>
+          </div>
         ) : (
           <button
             class="primary"

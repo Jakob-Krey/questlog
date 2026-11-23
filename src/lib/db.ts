@@ -103,8 +103,24 @@ export function watchActiveTimer(uid: string, cb: (timer: ActiveTimer | null) =>
   return onSnapshot(activeTimerDoc(uid), (snap) => {
     if (!snap.exists()) return cb(null);
     const d = snap.data();
-    cb({ questId: d.questId ?? null, title: d.title ?? '', startedAt: ms(d.startedAt) });
+    cb({
+      questId: d.questId ?? null,
+      title: d.title ?? '',
+      startedAt: ms(d.startedAt),
+      pausedAt: d.pausedAt ? ms(d.pausedAt) : null,
+      priorMs: Number(d.priorMs ?? 0),
+    });
   });
+}
+
+function timerDocData(timer: ActiveTimer) {
+  return {
+    questId: timer.questId,
+    title: timer.title,
+    startedAt: ts(timer.startedAt),
+    pausedAt: timer.pausedAt === null ? null : ts(timer.pausedAt),
+    priorMs: timer.priorMs,
+  };
 }
 
 function sessionFromTimer(timer: ActiveTimer, end: number, note?: string, autoStopped = false) {
@@ -119,8 +135,8 @@ function sessionFromTimer(timer: ActiveTimer, end: number, note?: string, autoSt
 }
 
 /**
- * Startet einen Timer. Läuft schon einer, wird er im selben Batch als Sitzung gespeichert.
- * Batch statt Transaktion, damit es auch offline funktioniert.
+ * Startet einen Timer. Läuft schon einer, wird er im selben Batch als Sitzung gespeichert
+ * (ein pausierter ist schon gespeichert). Batch statt Transaktion, damit es auch offline funktioniert.
  */
 export async function startTimer(
   uid: string,
@@ -129,36 +145,63 @@ export async function startTimer(
 ): Promise<void> {
   const now = Date.now();
   const batch = writeBatch(db);
-  if (current) batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
-  batch.set(activeTimerDoc(uid), { questId: next.questId, title: next.title, startedAt: ts(now) });
-  await batch.commit();
-}
-
-export async function stopTimer(uid: string, current: ActiveTimer, note?: string): Promise<void> {
-  const batch = writeBatch(db);
-  batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, Date.now(), note));
-  batch.delete(activeTimerDoc(uid));
+  if (current && current.pausedAt === null)
+    batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
+  batch.set(activeTimerDoc(uid), timerDocData({ ...next, startedAt: now, pausedAt: null, priorMs: 0 }));
   await batch.commit();
 }
 
 /**
- * Macht Stopp oder Wechsel rückgängig: Die gerade gespeicherte Sitzung wird
- * gelöscht und der vorherige Timer läuft mit seiner ursprünglichen Startzeit weiter.
+ * Pausiert: Der Abschnitt bis jetzt wird als Sitzung gespeichert, der Timer bleibt
+ * als pausiert stehen. So zählt die Pause nirgends mit.
+ */
+export async function pauseTimer(uid: string, current: ActiveTimer): Promise<void> {
+  if (current.pausedAt !== null) return;
+  const now = Math.max(Date.now(), current.startedAt);
+  const batch = writeBatch(db);
+  batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
+  batch.set(
+    activeTimerDoc(uid),
+    timerDocData({ ...current, pausedAt: now, priorMs: current.priorMs + (now - current.startedAt) }),
+  );
+  await batch.commit();
+}
+
+/** Setzt einen pausierten Timer fort: neuer Abschnitt ab jetzt, die Gesamtzeit läuft weiter. */
+export async function resumeTimer(uid: string, current: ActiveTimer): Promise<void> {
+  if (current.pausedAt === null) return;
+  await setDoc(activeTimerDoc(uid), timerDocData({ ...current, startedAt: Date.now(), pausedAt: null }));
+}
+
+export async function stopTimer(uid: string, current: ActiveTimer, note?: string): Promise<void> {
+  const batch = writeBatch(db);
+  const sessionRef = doc(sessionsCol(uid), timerSessionId(current.startedAt));
+  if (current.pausedAt === null) batch.set(sessionRef, sessionFromTimer(current, Date.now(), note));
+  batch.delete(activeTimerDoc(uid));
+  const done = batch.commit();
+  // Pausiert ist der letzte Abschnitt schon gespeichert; die Notiz kommt dorthin. Getrennt vom
+  // Batch, damit der Stopp auch klappt, wenn diese Sitzung inzwischen gelöscht wurde.
+  if (current.pausedAt !== null && note?.trim())
+    updateDoc(sessionRef, { note: note.trim() }).catch((e) => console.warn('Notiz nicht gespeichert', e));
+  await done;
+}
+
+/**
+ * Macht Stopp oder Wechsel rückgängig: Der vorherige Timer läuft mit seiner ursprünglichen
+ * Startzeit weiter, die gerade gespeicherte Sitzung wird gelöscht. War er pausiert, bleibt die
+ * Sitzung (sie stammt von der Pause) und der Timer steht wieder pausiert da.
  */
 export async function restoreTimer(uid: string, previous: ActiveTimer): Promise<void> {
   const batch = writeBatch(db);
-  batch.delete(doc(sessionsCol(uid), timerSessionId(previous.startedAt)));
-  batch.set(activeTimerDoc(uid), {
-    questId: previous.questId,
-    title: previous.title,
-    startedAt: ts(previous.startedAt),
-  });
+  if (previous.pausedAt === null) batch.delete(doc(sessionsCol(uid), timerSessionId(previous.startedAt)));
+  batch.set(activeTimerDoc(uid), timerDocData(previous));
   await batch.commit();
 }
 
 /** Kappt einen vergessenen Timer (> 8 h) auf Start + 8 h. Gibt true zurück, wenn gekappt wurde. */
 export async function autoStopIfNeeded(uid: string, current: ActiveTimer | null): Promise<boolean> {
-  if (!current) return false;
+  // Pausiert läuft keine Zeit, es gibt nichts zu kappen.
+  if (!current || current.pausedAt !== null) return false;
   const end = autoStopEnd(current.startedAt, Date.now());
   if (end === null) return false;
   const batch = writeBatch(db);

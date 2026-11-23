@@ -1,4 +1,4 @@
-# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt)
+# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar)
 
 Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART-Ziele mit Meilensteinen, bewusst ohne Enddaten. Zeit wird ausschließlich pro Quest gemessen; freie Timer ohne Quest gibt es nicht (mehr).
 
@@ -18,6 +18,7 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 - Timer nur für Quests. Kein freier Timer (Entscheidung 2026-11-21); ältere freie Sitzungen bleiben erhalten.
 - Laufender Timer ist live auf allen Geräten sichtbar und von jedem Gerät stoppbar.
 - Stopp speichert eine Sitzung (Start, Ende, optionale Notiz).
+- Timer lässt sich pausieren und fortsetzen (Entscheidung 2026-11-23). Pause speichert den Abschnitt bis dahin als eigene Sitzung, die Pausenzeit zählt nirgends mit. Die Timer-Uhr zeigt die Summe aller Abschnitte. Pausiert wird nichts gekappt.
 - Sitzungen nachträglich bearbeiten, löschen, manuell eintragen (neue Sitzungen immer mit Quest).
 - Vergessener Timer wird nach 8 Stunden gekappt (beim nächsten Öffnen der App; Spark-Plan hat keine Cloud Functions). Ende = Start + 8 h.
 
@@ -48,7 +49,8 @@ users/{uid}
 ├─ reflections/{questId}_{isoWeek}     z. B. abc123_2026-W47
 │    questId, isoWeek, text, updatedAt
 └─ state/activeTimer                    (genau ein Dokument oder keins)
-     questId | null, title, startedAt
+     questId | null, title, startedAt (Beginn des aktuellen Abschnitts),
+     pausedAt | null, priorMs (Zeit früherer Abschnitte)
 ```
 
 - `state/activeTimer` erzwingt „nur ein Timer“; alle Geräte hören per `onSnapshot` darauf.

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { saveReflection, watchQuests, watchReflections, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
 import { reportError } from '../lib/notify';
-import { totalsByQuest } from '../lib/stats';
+import { totalsByQuest, withRunningTimer } from '../lib/stats';
 import { formatDuration, isoWeek, periodRange } from '../lib/time';
 import type { Quest, Reflection as R, Session } from '../lib/types';
 import Loading from './Loading';
@@ -24,7 +24,7 @@ function Reflection({ uid, timer }: PageProps) {
 
   if (!quests || !sessions || !reflections) return <Loading />;
 
-  const entries = timer ? [...sessions, { questId: timer.questId, start: timer.startedAt, end: now }] : sessions;
+  const entries = withRunningTimer(sessions, timer, now);
   const totals = totalsByQuest(entries, week.from, week.to);
   // Aktive Quests plus alle, zu denen es in dieser Woche schon eine Reflexion gibt.
   const shown = quests.filter((q) => q.status === 'active' || reflections.some((r) => r.questId === q.id));

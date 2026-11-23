@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
   getAuth,
+  getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
   signOut as fbSignOut,
@@ -45,5 +46,11 @@ export async function signIn(): Promise<void> {
     throw err;
   }
 }
+
+/**
+ * Ergebnis einer Anmeldung per Redirect abholen. Wirft, wenn sie fehlgeschlagen ist,
+ * damit der Anmelde-Screen den Fehler zeigen kann statt kommentarlos stehen zu bleiben.
+ */
+export const finishRedirectSignIn = () => getRedirectResult(auth);
 
 export const signOut = () => fbSignOut(auth);

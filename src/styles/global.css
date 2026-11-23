@@ -347,6 +347,14 @@ header.top {
   background: var(--warn);
   animation: pulse 1.6s infinite;
 }
+.dot.is-paused {
+  background: var(--muted);
+  animation: none;
+}
+.paused-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 @keyframes pulse {
   50% {
     opacity: 0.3;
@@ -399,6 +407,9 @@ header.top {
 .card.is-running {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+.card.is-paused {
+  border-color: var(--accent);
 }
 .card-title {
   font-weight: 700;

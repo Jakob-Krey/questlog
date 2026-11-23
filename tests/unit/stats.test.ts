@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { behindMs, paceStatus, weeklyRatio } from '../../src/lib/stats';
+import { behindMs, paceStatus, timerElapsed, weeklyRatio, withRunningTimer } from '../../src/lib/stats';
 import { HOUR, daysLeftInWeek, formatHours } from '../../src/lib/time';
 
 describe('Wochenfortschritt', () => {
@@ -40,5 +40,24 @@ describe('Wochenbeschriftung', () => {
   it('setzt genau einen Punkt vor dem Jahr', async () => {
     const { periodLabel } = await import('../../src/lib/time');
     expect(periodLabel('week', new Date(2026, 10, 20))).toBe('KW 47 · 16.11.–22.11.2026');
+  });
+});
+
+describe('Pausierbarer Timer', () => {
+  const base = { questId: 'q1', title: 'Q', startedAt: 1_000, pausedAt: null, priorMs: 0 };
+  const saved = [{ questId: 'q1', start: 0, end: 500 }];
+
+  it('zählt laufend den aktuellen Abschnitt plus frühere Abschnitte', () => {
+    expect(timerElapsed({ ...base, priorMs: 2_000 }, 4_000)).toBe(5_000);
+  });
+
+  it('bleibt pausiert stehen', () => {
+    expect(timerElapsed({ ...base, pausedAt: 3_000, priorMs: 2_000 }, 9_000)).toBe(2_000);
+  });
+
+  it('rechnet nur einen laufenden Abschnitt live ein', () => {
+    expect(withRunningTimer(saved, base, 4_000)).toHaveLength(2);
+    expect(withRunningTimer(saved, { ...base, pausedAt: 3_000 }, 4_000)).toBe(saved);
+    expect(withRunningTimer(saved, null, 4_000)).toBe(saved);
   });
 });

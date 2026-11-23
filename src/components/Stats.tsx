@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
 import { watchQuests, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
-import { FREE_KEY, totalsByQuest } from '../lib/stats';
+import { FREE_KEY, totalsByQuest, withRunningTimer } from '../lib/stats';
 import { formatDuration, periodRange, type PeriodKind } from '../lib/time';
 import type { Quest, Session } from '../lib/types';
 import Loading from './Loading';
@@ -28,7 +28,7 @@ function Stats({ uid, timer }: PageProps) {
 
   if (!quests || !sessions) return <Loading />;
 
-  const entries = timer ? [...sessions, { questId: timer.questId, start: timer.startedAt, end: now }] : sessions;
+  const entries = withRunningTimer(sessions, timer, now);
   const totals = totalsByQuest(entries, range.from, range.to);
   const rows = [...totals.entries()]
     .map(([key, ms]) => ({

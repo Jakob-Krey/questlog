@@ -1,4 +1,5 @@
 import { overlapMs } from './time';
+import type { ActiveTimer } from './types';
 
 /** Schlüssel für Zeiten freier Timer in der Auswertung. */
 export const FREE_KEY = '__free__';
@@ -7,6 +8,20 @@ export interface TimedEntry {
   questId: string | null;
   start: number;
   end: number;
+}
+
+/** Gesamtzeit eines Timers über alle Abschnitte; pausiert steht die Uhr. */
+export function timerElapsed(timer: ActiveTimer, now: number): number {
+  return timer.priorMs + (timer.pausedAt === null ? Math.max(0, now - timer.startedAt) : 0);
+}
+
+/**
+ * Gespeicherte Sitzungen plus den laufenden Abschnitt des Timers.
+ * Pausiert ist alles schon gespeichert, dann kommt nichts hinzu.
+ */
+export function withRunningTimer(entries: TimedEntry[], timer: ActiveTimer | null, now: number): TimedEntry[] {
+  if (!timer || timer.pausedAt !== null) return entries;
+  return [...entries, { questId: timer.questId, start: timer.startedAt, end: now }];
 }
 
 /**

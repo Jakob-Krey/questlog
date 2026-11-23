@@ -32,7 +32,12 @@ export interface Session {
 export interface ActiveTimer {
   questId: string | null;
   title: string;
+  /** Beginn des aktuellen Abschnitts (bei Pause: des zuletzt gespeicherten). */
   startedAt: number;
+  /** Gesetzt, solange der Timer pausiert ist. Der Abschnitt bis dahin ist schon als Sitzung gespeichert. */
+  pausedAt: number | null;
+  /** Bereits gespeicherte Zeit früherer Abschnitte dieses Timers (vor Pausen). */
+  priorMs: number;
 }
 
 export interface Reflection {
