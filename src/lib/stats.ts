@@ -1,4 +1,4 @@
-import { overlapMs } from './time';
+import { overlapMs, pausedMsIn, type Pause } from './time';
 import type { ActiveTimer } from './types';
 
 /** Schlüssel für Zeiten freier Timer in der Auswertung. */
@@ -8,20 +8,20 @@ export interface TimedEntry {
   questId: string | null;
   start: number;
   end: number;
+  pauses?: Pause[];
 }
 
-/** Gesamtzeit eines Timers über alle Abschnitte; pausiert steht die Uhr. */
+/** Bisher gearbeitete Zeit eines Timers ohne Pausen; pausiert steht die Uhr. */
 export function timerElapsed(timer: ActiveTimer, now: number): number {
-  return timer.priorMs + (timer.pausedAt === null ? Math.max(0, now - timer.startedAt) : 0);
+  const end = timer.pausedAt ?? now;
+  return Math.max(0, end - timer.startedAt - pausedMsIn(timer.pauses, timer.startedAt, end));
 }
 
-/**
- * Gespeicherte Sitzungen plus den laufenden Abschnitt des Timers.
- * Pausiert ist alles schon gespeichert, dann kommt nichts hinzu.
- */
+/** Gespeicherte Sitzungen plus den Timer als Eintrag bis jetzt (pausiert: bis zum Pausenbeginn). */
 export function withRunningTimer(entries: TimedEntry[], timer: ActiveTimer | null, now: number): TimedEntry[] {
-  if (!timer || timer.pausedAt !== null) return entries;
-  return [...entries, { questId: timer.questId, start: timer.startedAt, end: now }];
+  if (!timer) return entries;
+  const end = Math.max(timer.startedAt, timer.pausedAt ?? now);
+  return [...entries, { questId: timer.questId, start: timer.startedAt, end, pauses: timer.pauses }];
 }
 
 /**
@@ -31,7 +31,7 @@ export function withRunningTimer(entries: TimedEntry[], timer: ActiveTimer | nul
 export function totalsByQuest(entries: TimedEntry[], from: number, to: number): Map<string, number> {
   const totals = new Map<string, number>();
   for (const e of entries) {
-    const ms = overlapMs(e.start, e.end, from, to);
+    const ms = overlapMs(e.start, e.end, from, to) - pausedMsIn(e.pauses, Math.max(e.start, from), Math.min(e.end, to));
     if (ms <= 0) continue;
     const key = e.questId ?? FREE_KEY;
     totals.set(key, (totals.get(key) ?? 0) + ms);

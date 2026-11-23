@@ -3,7 +3,7 @@ import { updateQuest, watchQuest, watchQuestSessions } from '../lib/db';
 import { useLive } from '../lib/hooks';
 import { reportError } from '../lib/notify';
 import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
-import { formatDuration } from '../lib/time';
+import { formatDuration, workedMs } from '../lib/time';
 import { STATUS_LABEL, type Milestone, type Quest, type QuestStatus, type Session } from '../lib/types';
 import Icon from './Icon';
 import Loading from './Loading';
@@ -80,7 +80,7 @@ function QuestDetail({ uid, timer }: PageProps) {
                   {s.note && <span class="muted"> · {s.note}</span>}
                   {s.autoStopped && <span class="badge">automatisch gestoppt</span>}
                 </span>
-                <span>{formatDuration(s.end - s.start)}</span>
+                <span>{formatDuration(workedMs(s))}</span>
               </li>
             ))}
           </ul>

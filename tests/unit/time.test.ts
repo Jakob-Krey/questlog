@@ -52,6 +52,10 @@ describe('Auto-Stopp nach 8 Stunden', () => {
   it('kappt vergessene Timer auf Start + 8 h', () => {
     expect(autoStopEnd(start, start + 30 * HOUR)).toBe(start + 8 * HOUR);
   });
+  it('zählt Pausen beim Kappen nicht mit', () => {
+    expect(autoStopEnd(start, start + 9 * HOUR, 2 * HOUR)).toBeNull();
+    expect(autoStopEnd(start, start + 30 * HOUR, 2 * HOUR)).toBe(start + 10 * HOUR);
+  });
 });
 
 describe('Auswertung', () => {

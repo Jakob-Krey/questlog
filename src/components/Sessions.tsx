@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { deleteSession, saveSession, watchQuests, watchSessionsInRange, type SessionInput } from '../lib/db';
 import { useLive } from '../lib/hooks';
 import { reportError } from '../lib/notify';
-import { HOUR, formatDuration, fromLocalInput, overlapMs, periodRange, toLocalInput } from '../lib/time';
+import { HOUR, formatDuration, fromLocalInput, overlapMs, pausedMsIn, periodRange, toLocalInput, workedMs } from '../lib/time';
 import type { Quest, Session } from '../lib/types';
 import Loading from './Loading';
 import PeriodNav from './PeriodNav';
@@ -78,11 +78,13 @@ function SessionRow({ uid, session, quests, label }: { uid: string; session: Ses
         <span class="muted">
           {new Date(session.start).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })}{' '}
           {fmt(session.start)}–{fmt(session.end)}
+          {session.pauses.length > 0 &&
+            ` · ${formatDuration(pausedMsIn(session.pauses, session.start, session.end))} Pause`}
           {session.note && ` · ${session.note}`}
         </span>
       </span>
       <span class="row tight">
-        {formatDuration(session.end - session.start)}
+        {formatDuration(workedMs(session))}
         <button class="link" onClick={() => setEditing(true)}>
           Bearbeiten
         </button>
@@ -130,6 +132,7 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
           start: s,
           end: en,
           note,
+          pauses: initial.pauses,
         }).catch((err) => reportError('Speichern der Sitzung', err));
         onDone();
       }}

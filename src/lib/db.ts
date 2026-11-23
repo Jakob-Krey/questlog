@@ -17,7 +17,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { DAY, autoStopEnd } from './time';
+import { DAY, autoStopEnd, clampPauses, pausedMsIn, type Pause } from './time';
 import type { ActiveTimer, Milestone, Quest, QuestStatus, Reflection, Session } from './types';
 
 // Alle Daten liegen unter users/{uid}/… (siehe firestore.rules).
@@ -28,6 +28,10 @@ const activeTimerDoc = (uid: string) => doc(db, 'users', uid, 'state', 'activeTi
 
 const ms = (v: unknown): number => (v instanceof Timestamp ? v.toMillis() : typeof v === 'number' ? v : Date.now());
 const ts = (millis: number) => Timestamp.fromMillis(millis);
+
+const toPauses = (v: unknown): Pause[] =>
+  Array.isArray(v) ? v.map((p) => ({ start: ms(p?.start), end: ms(p?.end) })).filter((p) => p.end > p.start) : [];
+const fromPauses = (pauses: Pause[]) => pauses.map((p) => ({ start: ts(p.start), end: ts(p.end) }));
 
 /** Sitzungs-ID eines Timers – gleich auf allen Geräten, daher keine Duplikate. */
 export const timerSessionId = (startedAt: number) => `t_${startedAt}`;
@@ -55,6 +59,7 @@ function toSession(id: string, d: DocumentData): Session {
     end: ms(d.end),
     note: d.note || undefined,
     autoStopped: !!d.autoStopped,
+    pauses: toPauses(d.pauses),
   };
 }
 
@@ -108,7 +113,7 @@ export function watchActiveTimer(uid: string, cb: (timer: ActiveTimer | null) =>
       title: d.title ?? '',
       startedAt: ms(d.startedAt),
       pausedAt: d.pausedAt ? ms(d.pausedAt) : null,
-      priorMs: Number(d.priorMs ?? 0),
+      pauses: toPauses(d.pauses),
     });
   });
 }
@@ -119,24 +124,30 @@ function timerDocData(timer: ActiveTimer) {
     title: timer.title,
     startedAt: ts(timer.startedAt),
     pausedAt: timer.pausedAt === null ? null : ts(timer.pausedAt),
-    priorMs: timer.priorMs,
+    pauses: fromPauses(timer.pauses),
   };
 }
 
+/**
+ * Eine Sitzung für den ganzen Timer. Wird er während einer Pause beendet,
+ * endet die Sitzung mit dem Pausenbeginn.
+ */
 function sessionFromTimer(timer: ActiveTimer, end: number, note?: string, autoStopped = false) {
+  const stop = Math.max(timer.startedAt, Math.min(end, timer.pausedAt ?? end));
   return {
     questId: timer.questId,
     title: timer.title,
     start: ts(timer.startedAt),
-    end: ts(Math.max(end, timer.startedAt)),
+    end: ts(stop),
+    pauses: fromPauses(clampPauses(timer.pauses, timer.startedAt, stop)),
     note: note?.trim() || null,
     autoStopped,
   };
 }
 
 /**
- * Startet einen Timer. Läuft schon einer, wird er im selben Batch als Sitzung gespeichert
- * (ein pausierter ist schon gespeichert). Batch statt Transaktion, damit es auch offline funktioniert.
+ * Startet einen Timer. Läuft schon einer (auch pausiert), wird er im selben Batch als Sitzung
+ * gespeichert. Batch statt Transaktion, damit es auch offline funktioniert.
  */
 export async function startTimer(
   uid: string,
@@ -145,64 +156,50 @@ export async function startTimer(
 ): Promise<void> {
   const now = Date.now();
   const batch = writeBatch(db);
-  if (current && current.pausedAt === null)
-    batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
-  batch.set(activeTimerDoc(uid), timerDocData({ ...next, startedAt: now, pausedAt: null, priorMs: 0 }));
+  if (current) batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
+  batch.set(activeTimerDoc(uid), timerDocData({ ...next, startedAt: now, pausedAt: null, pauses: [] }));
   await batch.commit();
 }
 
-/**
- * Pausiert: Der Abschnitt bis jetzt wird als Sitzung gespeichert, der Timer bleibt
- * als pausiert stehen. So zählt die Pause nirgends mit.
- */
+/** Pausiert den Timer. Die Sitzung läuft weiter, nur die Pausenzeit zählt nicht. */
 export async function pauseTimer(uid: string, current: ActiveTimer): Promise<void> {
   if (current.pausedAt !== null) return;
-  const now = Math.max(Date.now(), current.startedAt);
-  const batch = writeBatch(db);
-  batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
-  batch.set(
-    activeTimerDoc(uid),
-    timerDocData({ ...current, pausedAt: now, priorMs: current.priorMs + (now - current.startedAt) }),
-  );
-  await batch.commit();
+  await setDoc(activeTimerDoc(uid), timerDocData({ ...current, pausedAt: Math.max(Date.now(), current.startedAt) }));
 }
 
-/** Setzt einen pausierten Timer fort: neuer Abschnitt ab jetzt, die Gesamtzeit läuft weiter. */
+/** Setzt den pausierten Timer fort; die Pause wird in der Sitzung vermerkt. */
 export async function resumeTimer(uid: string, current: ActiveTimer): Promise<void> {
   if (current.pausedAt === null) return;
-  await setDoc(activeTimerDoc(uid), timerDocData({ ...current, startedAt: Date.now(), pausedAt: null }));
+  const pause = { start: current.pausedAt, end: Math.max(Date.now(), current.pausedAt) };
+  await setDoc(activeTimerDoc(uid), timerDocData({ ...current, pausedAt: null, pauses: [...current.pauses, pause] }));
 }
 
 export async function stopTimer(uid: string, current: ActiveTimer, note?: string): Promise<void> {
   const batch = writeBatch(db);
-  const sessionRef = doc(sessionsCol(uid), timerSessionId(current.startedAt));
-  if (current.pausedAt === null) batch.set(sessionRef, sessionFromTimer(current, Date.now(), note));
+  batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, Date.now(), note));
   batch.delete(activeTimerDoc(uid));
-  const done = batch.commit();
-  // Pausiert ist der letzte Abschnitt schon gespeichert; die Notiz kommt dorthin. Getrennt vom
-  // Batch, damit der Stopp auch klappt, wenn diese Sitzung inzwischen gelöscht wurde.
-  if (current.pausedAt !== null && note?.trim())
-    updateDoc(sessionRef, { note: note.trim() }).catch((e) => console.warn('Notiz nicht gespeichert', e));
-  await done;
+  await batch.commit();
 }
 
 /**
- * Macht Stopp oder Wechsel rückgängig: Der vorherige Timer läuft mit seiner ursprünglichen
- * Startzeit weiter, die gerade gespeicherte Sitzung wird gelöscht. War er pausiert, bleibt die
- * Sitzung (sie stammt von der Pause) und der Timer steht wieder pausiert da.
+ * Macht Stopp oder Wechsel rückgängig: Die gerade gespeicherte Sitzung wird gelöscht und
+ * der vorherige Timer läuft mit Startzeit und Pausen weiter (bzw. steht wieder pausiert da).
  */
 export async function restoreTimer(uid: string, previous: ActiveTimer): Promise<void> {
   const batch = writeBatch(db);
-  if (previous.pausedAt === null) batch.delete(doc(sessionsCol(uid), timerSessionId(previous.startedAt)));
+  batch.delete(doc(sessionsCol(uid), timerSessionId(previous.startedAt)));
   batch.set(activeTimerDoc(uid), timerDocData(previous));
   await batch.commit();
 }
 
-/** Kappt einen vergessenen Timer (> 8 h) auf Start + 8 h. Gibt true zurück, wenn gekappt wurde. */
+/**
+ * Kappt einen vergessenen Timer nach 8 h Arbeitszeit (Pausen zählen nicht).
+ * Pausiert läuft keine Zeit, dann wird nichts gekappt. Gibt true zurück, wenn gekappt wurde.
+ */
 export async function autoStopIfNeeded(uid: string, current: ActiveTimer | null): Promise<boolean> {
-  // Pausiert läuft keine Zeit, es gibt nichts zu kappen.
   if (!current || current.pausedAt !== null) return false;
-  const end = autoStopEnd(current.startedAt, Date.now());
+  const now = Date.now();
+  const end = autoStopEnd(current.startedAt, now, pausedMsIn(current.pauses, current.startedAt, now));
   if (end === null) return false;
   const batch = writeBatch(db);
   batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, end, undefined, true));
@@ -237,7 +234,7 @@ export function watchQuestSessions(uid: string, questId: string, n: number, cb: 
   return onSnapshot(q, (snap) => cb(snap.docs.map((d) => toSession(d.id, d.data()))));
 }
 
-export type SessionInput = Omit<Session, 'id' | 'autoStopped'>;
+export type SessionInput = Omit<Session, 'id' | 'autoStopped' | 'pauses'> & { pauses?: Pause[] };
 
 export async function saveSession(uid: string, id: string | null, s: SessionInput): Promise<void> {
   if (s.end <= s.start) throw new Error('Das Ende muss nach dem Start liegen.');
@@ -246,6 +243,8 @@ export async function saveSession(uid: string, id: string | null, s: SessionInpu
     title: s.title.trim(),
     start: ts(s.start),
     end: ts(s.end),
+    // Pausen bleiben beim Bearbeiten erhalten, soweit sie noch in der Sitzung liegen.
+    pauses: fromPauses(clampPauses(s.pauses, s.start, s.end)),
     note: s.note?.trim() || null,
     autoStopped: false,
   };

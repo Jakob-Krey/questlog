@@ -42,7 +42,7 @@ export function useActiveTimer(uid: string): ActiveTimer | null | undefined {
     // Auch bei dauerhaft geöffneter App: regelmäßig prüfen.
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [uid, timer?.startedAt, timer?.pausedAt]);
+  }, [uid, timer?.startedAt, timer?.pausedAt, timer?.pauses.length]);
   return timer;
 }
 

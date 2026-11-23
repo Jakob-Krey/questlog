@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { behindMs, paceStatus, timerElapsed, weeklyRatio, withRunningTimer } from '../../src/lib/stats';
+import { behindMs, paceStatus, timerElapsed, totalsByQuest, weeklyRatio, withRunningTimer } from '../../src/lib/stats';
 import { HOUR, daysLeftInWeek, formatHours } from '../../src/lib/time';
 
 describe('Wochenfortschritt', () => {
@@ -44,20 +44,25 @@ describe('Wochenbeschriftung', () => {
 });
 
 describe('Pausierbarer Timer', () => {
-  const base = { questId: 'q1', title: 'Q', startedAt: 1_000, pausedAt: null, priorMs: 0 };
-  const saved = [{ questId: 'q1', start: 0, end: 500 }];
+  const base = { questId: 'q1', title: 'Q', startedAt: 0, pausedAt: null, pauses: [{ start: 1_000, end: 3_000 }] };
 
-  it('zählt laufend den aktuellen Abschnitt plus frühere Abschnitte', () => {
-    expect(timerElapsed({ ...base, priorMs: 2_000 }, 4_000)).toBe(5_000);
+  it('zieht Pausen von der Laufzeit ab', () => {
+    expect(timerElapsed(base, 10_000)).toBe(8_000);
   });
 
   it('bleibt pausiert stehen', () => {
-    expect(timerElapsed({ ...base, pausedAt: 3_000, priorMs: 2_000 }, 9_000)).toBe(2_000);
+    expect(timerElapsed({ ...base, pausedAt: 5_000 }, 60_000)).toBe(3_000);
   });
 
-  it('rechnet nur einen laufenden Abschnitt live ein', () => {
-    expect(withRunningTimer(saved, base, 4_000)).toHaveLength(2);
-    expect(withRunningTimer(saved, { ...base, pausedAt: 3_000 }, 4_000)).toBe(saved);
-    expect(withRunningTimer(saved, null, 4_000)).toBe(saved);
+  it('zählt den Timer als eine Sitzung ohne Pausenzeit', () => {
+    const entries = withRunningTimer([], { ...base, pausedAt: 5_000 }, 60_000);
+    expect(entries).toHaveLength(1);
+    expect(totalsByQuest(entries, 0, 100_000).get('q1')).toBe(3_000);
+  });
+
+  it('rechnet Pausen über Zeitraumgrenzen anteilig', () => {
+    const e = [{ questId: 'q1', start: 0, end: 10_000, pauses: [{ start: 4_000, end: 8_000 }] }];
+    expect(totalsByQuest(e, 0, 6_000).get('q1')).toBe(4_000);
+    expect(totalsByQuest(e, 6_000, 20_000).get('q1')).toBe(2_000);
   });
 });

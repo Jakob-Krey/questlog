@@ -78,9 +78,35 @@ export function overlapMs(start: number, end: number, from: number, to: number):
   return Math.max(0, Math.min(end, to) - Math.max(start, from));
 }
 
-/** Endzeit, auf die ein vergessener Timer gekappt wird, oder null, wenn er weiterlaufen darf. */
-export function autoStopEnd(startedAt: number, now: number): number | null {
-  return now - startedAt > AUTO_STOP_MS ? startedAt + AUTO_STOP_MS : null;
+/** Pause innerhalb einer Sitzung bzw. eines Timers. */
+export interface Pause {
+  start: number;
+  end: number;
+}
+
+/** Summe der Pausen, soweit sie in [from, to) liegen. */
+export function pausedMsIn(pauses: Pause[] | undefined, from: number, to: number): number {
+  return (pauses ?? []).reduce((sum, p) => sum + overlapMs(p.start, p.end, from, to), 0);
+}
+
+/** Gearbeitete Zeit einer Sitzung: Ende − Start − Pausen. */
+export function workedMs(s: { start: number; end: number; pauses?: Pause[] }): number {
+  return Math.max(0, s.end - s.start - pausedMsIn(s.pauses, s.start, s.end));
+}
+
+/** Pausen auf [start, end) zuschneiden, leere verwerfen (z. B. nach dem Bearbeiten einer Sitzung). */
+export function clampPauses(pauses: Pause[] | undefined, start: number, end: number): Pause[] {
+  return (pauses ?? [])
+    .map((p) => ({ start: Math.max(p.start, start), end: Math.min(p.end, end) }))
+    .filter((p) => p.end > p.start);
+}
+
+/**
+ * Endzeit, auf die ein vergessener Timer gekappt wird, oder null, wenn er weiterlaufen darf.
+ * Gezählt wird die gearbeitete Zeit; Pausen (alle vor `now`) verlängern das Ende entsprechend.
+ */
+export function autoStopEnd(startedAt: number, now: number, pausedMs = 0): number | null {
+  return now - startedAt - pausedMs > AUTO_STOP_MS ? startedAt + pausedMs + AUTO_STOP_MS : null;
 }
 
 /** "1:05:09" für den laufenden Timer. */

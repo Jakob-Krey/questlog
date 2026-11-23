@@ -1,3 +1,7 @@
+import type { Pause } from './time';
+
+export type { Pause };
+
 export type QuestStatus = 'active' | 'paused' | 'archived';
 
 export interface Milestone {
@@ -27,17 +31,18 @@ export interface Session {
   end: number;
   note?: string;
   autoStopped: boolean;
+  /** Pausen innerhalb der Sitzung; zählen nicht als Arbeitszeit. */
+  pauses: Pause[];
 }
 
 export interface ActiveTimer {
   questId: string | null;
   title: string;
-  /** Beginn des aktuellen Abschnitts (bei Pause: des zuletzt gespeicherten). */
   startedAt: number;
-  /** Gesetzt, solange der Timer pausiert ist. Der Abschnitt bis dahin ist schon als Sitzung gespeichert. */
+  /** Beginn der laufenden Pause, sonst null. */
   pausedAt: number | null;
-  /** Bereits gespeicherte Zeit früherer Abschnitte dieses Timers (vor Pausen). */
-  priorMs: number;
+  /** Abgeschlossene Pausen dieses Timers. */
+  pauses: Pause[];
 }
 
 export interface Reflection {
