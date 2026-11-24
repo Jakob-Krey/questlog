@@ -138,3 +138,7 @@
 - .env geprüft: weiterhin ignoriert und nie committet; nur .env.example ist im Repo.
 - skills-lock.json bewusst weder ignoriert noch committet: Entscheidung steht noch aus.
 - Offen: Entscheidung zu skills-lock.json; Ende-zu-Ende-Test Kalender-Sync auf der Live-Seite; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-24 18:02 – skills-lock.json ins Repo
+- skills-lock.json committet, damit die ignorierten Agent-Skills (Firebase, Impeccable) auf einem anderen Rechner oder nach neuem Klonen wiederhergestellt werden können. Die Datei enthält nur Quelle, Pfad und Hash je Skill, keine Geheimnisse.
+- Offen: Ende-zu-Ende-Test Kalender-Sync auf der Live-Seite; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
