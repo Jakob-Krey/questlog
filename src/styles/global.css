@@ -290,6 +290,29 @@ header.top {
   color: var(--muted);
   white-space: nowrap;
 }
+.settings-link {
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.settings-link:hover,
+.settings-link.active {
+  color: var(--text);
+}
+
+/* ---------- Einstellungen ---------- */
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+.switch-row input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--accent);
+}
 
 /* ---------- Timer-Leiste ---------- */
 

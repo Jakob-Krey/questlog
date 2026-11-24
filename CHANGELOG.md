@@ -110,3 +110,20 @@
 - 8-h-Kappung zählt nur Arbeitszeit (autoStopEnd mit Pausensumme). Pausen bleiben beim Bearbeiten einer Sitzung erhalten, soweit sie noch in Start–Ende liegen. Stopp während der Pause beendet die Sitzung zum Pausenbeginn.
 - Dateien: lib/db.ts, lib/time.ts, lib/stats.ts, lib/types.ts, lib/hooks.ts, Sessions.tsx, QuestDetail.tsx, docs/konzept.md, public/sw.js (Cache v4), Tests (21 grün).
 - Offen: authDomain auf questlog-85f26.web.app umstellen (.env und Secret FIREBASE_ENV), erst nachdem Jakob die Weiterleitungs-URI eingetragen hat; Pause im echten Login nicht getestet; Sitzungen, die mit Pausen länger als einen Tag vor Zeitraumbeginn starten, fehlen in der Abfrage (watchSessionsInRange holt ab from − 1 Tag); Löschen nutzt weiter confirm(); Gold im App-Icon noch vorhanden; erneute Critique steht aus; .impeccable/config.local.json und hook.cache.json, neue Skills/Agents-Ordner und skills-lock.json nicht committet; Live-Modus von impeccable nicht eingerichtet; Google-Login in PR-Vorschauen geht ohne Domain-Freigabe nicht (bewusst so entschieden).
+
+## 2026-11-24 17:16 – Kalender-Sync: Vorschlag Akzeptanzkriterien & Datenmodell
+- Vorschlag für Google-Kalender-Anbindung erstellt (Akzeptanzkriterien, Datenmodell, Token-Handling); noch kein Code geändert.
+- Entscheidung vorgeschlagen: Event-ID wird vor dem API-Aufruf im Client erzeugt und an der Sitzung gespeichert, damit Wiederholungen und Stopps von zwei Geräten keine doppelten Termine erzeugen.
+- Offen: Freigabe des Vorschlags; OAuth-Client-ID (Web) als PUBLIC_GOOGLE_OAUTH_CLIENT_ID in .env und GitHub-Secrets; Umsetzung Kalender-Sync. (Ältere offene Punkte aus früheren Einträgen nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-24 17:38 – Google-Kalender-Sync umgesetzt
+- Neu: src/lib/gcal.ts (GIS-Token nur im Speicher, Kalender „Questlog“ anlegen, Sync von Sitzungen und Löschungen), src/lib/calendarEvent.ts (Event-IDs, Termininhalt), Seite /einstellungen (Settings.tsx) mit Schalter und „Jetzt übertragen“.
+- db.ts/timerActions.ts/hooks.ts/Sessions.tsx: Sitzungen bekommen bei aktivem Sync calendar { eventId, synced:false }, Löschen/Rückgängig legen calendarDeletes/{eventId} an; der Sync läuft direkt im Klick-Handler (Stopp, Wechseln, Speichern, Löschen, Rückgängig). Die 8-h-Kappung markiert nur.
+- Entscheidung: Löschungen vor dem Anlegen, damit nach „Rückgängig“ und erneutem Stopp (gleiche Event-ID) kein neuer Termin gelöscht wird. 409 → Termin per PUT aktualisieren bzw. wiederherstellen.
+- konzept.md, Tests (Unit + Rules), sw.js (Cache v5 inkl. /einstellungen), .env.example, CI-Warnung bei fehlender PUBLIC_GOOGLE_OAUTH_CLIENT_ID.
+- Offen: Ende-zu-Ende-Test mit echtem Google-Konto (Einschalten, Stopp, Bearbeiten, Löschen, Rückgängig); Verhalten des Google-Popups in der installierten iOS-PWA prüfen; Änderungen noch nicht committet. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-24 17:49 – CI: OAuth-Client-ID aus eigenem Secret
+- Beide Workflows hängen das Secret PUBLIC_GOOGLE_OAUTH_CLIENT_ID an die aus FIREBASE_ENV erzeugte .env an.
+- Die Prüfung bricht jetzt mit Fehler ab, wenn die ID fehlt (vorher nur Warnung), damit kein Live-Deploy ohne funktionierenden Kalender-Sync rausgeht.
+- Offen: Ende-zu-Ende-Test mit echtem Google-Konto; Google-Popup in der installierten iOS-PWA prüfen; Änderungen noch nicht committet. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

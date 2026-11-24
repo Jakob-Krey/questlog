@@ -56,4 +56,12 @@ describe('firestore.rules', () => {
     await assertSucceeds(getDoc(doc(alice(), 'users/alice')));
     await assertFails(getDoc(doc(bob(), 'users/alice')));
   });
+
+  it('Kalender: Einstellungen und ausstehende Löschungen nur für den Nutzer selbst', async () => {
+    await assertSucceeds(setDoc(doc(alice(), 'users/alice'), { calendarSync: { enabled: true, calendarId: 'c1' } }));
+    await assertSucceeds(setDoc(doc(alice(), 'users/alice/calendarDeletes/qlt1'), { createdAt: 1 }));
+    await assertSucceeds(deleteDoc(doc(alice(), 'users/alice/calendarDeletes/qlt1')));
+    await assertFails(setDoc(doc(bob(), 'users/alice'), { calendarSync: { enabled: false } }));
+    await assertFails(setDoc(doc(bob(), 'users/alice/calendarDeletes/qlt2'), { createdAt: 1 }));
+  });
 });

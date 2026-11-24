@@ -1,4 +1,4 @@
-# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar)
+# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar; 2026-11-24: Google-Kalender-Sync)
 
 Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART-Ziele mit Meilensteinen, bewusst ohne Enddaten. Zeit wird ausschließlich pro Quest gemessen; freie Timer ohne Quest gibt es nicht (mehr).
 
@@ -29,6 +29,16 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 **Wochenreflexion**
 - Pro Quest und Kalenderwoche ein kurzer Text, daneben Ist- vs. Soll-Stunden. Erneutes Speichern überschreibt.
 
+**Google-Kalender-Sync** (Entscheidung 2026-11-24)
+- Seite „Einstellungen“: Schalter Kalender-Sync an/aus (Standard aus) und Button „Jetzt übertragen“ für offene Sitzungen.
+- Beim ersten Einschalten: Zustimmung bei Google (Scope `calendar.app.created`), eigener Kalender „Questlog“ (Europe/Berlin) wird angelegt, ID in Firestore. Wurde er in Google gelöscht, legt die App ihn neu an.
+- Bei aktivem Sync erzeugt jede Sitzung einen Termin „Questlog – <Quest-Name>“ über die ganze Spanne Start–Ende; Notiz sowie Arbeits- und Pausenzeit stehen in der Beschreibung. Gilt für Stopp, Wechseln und manuell eingetragene Sitzungen.
+- Gekappte Timer (8 h, ohne Klick) und fehlgeschlagene Übertragungen werden als „nicht im Kalender“ markiert und beim nächsten Stopp oder per Button nachgeholt. Die Sitzung in Firestore geht dabei nie verloren.
+- Bearbeiten aktualisiert, Löschen und „Rückgängig“ entfernen den Termin. Ausstehende Löschungen werden ebenfalls nachgeholt.
+- Keine Duplikate: Die Event-ID entsteht im Client und steht vor dem API-Aufruf an der Sitzung (Timer-Sitzungen: `qlt<startedAt-Millis>`).
+- Access-Token nur im Speicher (Google Identity Services), angefordert direkt im Klick-Handler; nach der ersten Zustimmung ohne erneute Nachfrage.
+- Sync aus: Es wird nichts in den Kalender geschrieben oder markiert; bestehende Termine bleiben. Alte Sitzungen werden nicht nachträglich übertragen.
+
 **PWA**
 - Installierbar auf Mac (Safari „Zum Dock hinzufügen“) und Handy (Home-Bildschirm). Rein statischer Astro-Build.
 
@@ -40,12 +50,16 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 
 ```
 users/{uid}
+│    calendarSync: { enabled, calendarId | null }
 ├─ quests/{questId}
 │    name, goal, weeklyHours, status: "active"|"paused"|"archived",
 │    milestones: [{ id, text, done, order }],
 │    todoistLabel? (optional, erst später genutzt), createdAt, updatedAt
 ├─ sessions/{sessionId}
-│    questId | null (null nur bei alten freien Sitzungen), title, start, end, pauses: [{ start, end }], note?, autoStopped
+│    questId | null (null nur bei alten freien Sitzungen), title, start, end, pauses: [{ start, end }], note?, autoStopped,
+│    calendar?: { eventId, synced }   (fehlt = nie für den Sync vorgesehen; synced false = wird nachgeholt)
+├─ calendarDeletes/{eventId}           ausstehende Löschungen im Google Kalender
+│    createdAt
 ├─ reflections/{questId}_{isoWeek}     z. B. abc123_2026-W47
 │    questId, isoWeek, text, updatedAt
 └─ state/activeTimer                    (genau ein Dokument oder keins)

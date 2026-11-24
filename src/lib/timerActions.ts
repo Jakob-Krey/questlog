@@ -1,4 +1,5 @@
 import { pauseTimer, restoreTimer, resumeTimer, startTimer, stopTimer } from './db';
+import { calendarEnabled, syncFromClick } from './gcal';
 import { dismissActions, notify, reportError } from './notify';
 import { timerElapsed } from './stats';
 import { formatDuration } from './time';
@@ -12,7 +13,8 @@ function savedNotice(uid: string, prev: ActiveTimer, suffix = '') {
       label: 'Rückgängig',
       run: () => {
         dismissActions();
-        restoreTimer(uid, prev).catch((e) => reportError('Rückgängigmachen', e));
+        restoreTimer(uid, prev, calendarEnabled(uid)).catch((e) => reportError('Rückgängigmachen', e));
+        syncFromClick(uid);
       },
     },
   });
@@ -28,7 +30,11 @@ export function startQuestTimer(uid: string, current: ActiveTimer | null, quest:
     return;
   }
   // Nicht auf den Server warten: Offline wird der Batch nachgereicht.
-  startTimer(uid, current, { questId: quest.id, title: quest.name }).catch((e) => reportError('Starten', e));
+  startTimer(uid, current, { questId: quest.id, title: quest.name }, calendarEnabled(uid)).catch((e) =>
+    reportError('Starten', e),
+  );
+  // Nur ein Wechsel erzeugt eine Sitzung (und damit einen Termin).
+  if (current) syncFromClick(uid);
   dismissActions();
   if (current) savedNotice(uid, current, ` Jetzt läuft „${quest.name}“.`);
 }
@@ -44,7 +50,9 @@ export function resumeQuestTimer(uid: string, current: ActiveTimer) {
 }
 
 export function stopRunningTimer(uid: string, current: ActiveTimer, note?: string) {
-  stopTimer(uid, current, note).catch((e) => reportError('Stoppen', e));
+  stopTimer(uid, current, note, calendarEnabled(uid)).catch((e) => reportError('Stoppen', e));
+  // Direkt im Klick: Token anfordern (kein blockiertes Popup) und alles Offene übertragen.
+  syncFromClick(uid);
   dismissActions();
   savedNotice(uid, current);
 }

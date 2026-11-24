@@ -2,13 +2,14 @@ import type { User } from 'firebase/auth';
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { finishRedirectSignIn, signIn, signOut } from '../lib/firebase';
+import { watchCalendarSettings } from '../lib/gcal';
 import { useActiveTimer, useAuth, useOnline } from '../lib/hooks';
 import type { ActiveTimer } from '../lib/types';
 import Loading from './Loading';
 import Notices from './Notices';
 import TimerBar from './TimerBar';
 
-export type Page = 'uebersicht' | 'sitzungen' | 'auswertung' | 'reflexion' | 'quest';
+export type Page = 'uebersicht' | 'sitzungen' | 'auswertung' | 'reflexion' | 'quest' | 'einstellungen';
 
 const NAV: { page: Page; href: string; label: string }[] = [
   { page: 'uebersicht', href: '/', label: 'Übersicht' },
@@ -64,6 +65,8 @@ function Login() {
 }
 
 function SignedIn({ user, page, children }: { user: User } & Props) {
+  // Kalender-Einstellungen live halten: Klick-Handler brauchen sie synchron.
+  useEffect(() => watchCalendarSettings(user.uid), [user.uid]);
   const timer = useActiveTimer(user.uid);
   const online = useOnline();
   return (
@@ -97,6 +100,9 @@ export function AppHeader({ page, online, email }: { page: Page; online: boolean
             Offline<span class="pill-detail"> – wird synchronisiert</span>
           </span>
         )}
+        <a href="/einstellungen" class={`settings-link${page === 'einstellungen' ? ' active' : ''}`}>
+          Einstellungen
+        </a>
         <button class="link signout" onClick={() => signOut()} title={email}>
           Abmelden
         </button>

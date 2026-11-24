@@ -33,6 +33,14 @@ export interface Session {
   autoStopped: boolean;
   /** Pausen innerhalb der Sitzung; zählen nicht als Arbeitszeit. */
   pauses: Pause[];
+  /** Bezug zum Termin im Google Kalender; fehlt bei Sitzungen ohne Sync. */
+  calendar?: SessionCalendar;
+}
+
+export interface SessionCalendar {
+  eventId: string;
+  /** false = „nicht im Kalender“, wird beim nächsten Sync nachgeholt. */
+  synced: boolean;
 }
 
 export interface ActiveTimer {

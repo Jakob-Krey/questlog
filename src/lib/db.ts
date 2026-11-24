@@ -2,7 +2,6 @@ import {
   Timestamp,
   addDoc,
   collection,
-  deleteDoc,
   doc,
   limit,
   onSnapshot,
@@ -16,15 +15,18 @@ import {
   type DocumentData,
   type Unsubscribe,
 } from 'firebase/firestore';
+import { randomEventId, timerEventId } from './calendarEvent';
 import { db } from './firebase';
 import { DAY, autoStopEnd, clampPauses, pausedMsIn, type Pause } from './time';
-import type { ActiveTimer, Milestone, Quest, QuestStatus, Reflection, Session } from './types';
+import type { ActiveTimer, Milestone, Quest, QuestStatus, Reflection, Session, SessionCalendar } from './types';
 
 // Alle Daten liegen unter users/{uid}/… (siehe firestore.rules).
 const questsCol = (uid: string) => collection(db, 'users', uid, 'quests');
 const sessionsCol = (uid: string) => collection(db, 'users', uid, 'sessions');
 const reflectionsCol = (uid: string) => collection(db, 'users', uid, 'reflections');
 const activeTimerDoc = (uid: string) => doc(db, 'users', uid, 'state', 'activeTimer');
+export const userDoc = (uid: string) => doc(db, 'users', uid);
+export const calendarDeletesCol = (uid: string) => collection(db, 'users', uid, 'calendarDeletes');
 
 const ms = (v: unknown): number => (v instanceof Timestamp ? v.toMillis() : typeof v === 'number' ? v : Date.now());
 const ts = (millis: number) => Timestamp.fromMillis(millis);
@@ -50,7 +52,12 @@ function toQuest(id: string, d: DocumentData): Quest {
   };
 }
 
-function toSession(id: string, d: DocumentData): Session {
+function toCalendar(v: unknown): SessionCalendar | undefined {
+  const c = v as { eventId?: unknown; synced?: unknown } | null | undefined;
+  return c && typeof c.eventId === 'string' ? { eventId: c.eventId, synced: !!c.synced } : undefined;
+}
+
+export function toSession(id: string, d: DocumentData): Session {
   return {
     id,
     questId: d.questId ?? null,
@@ -60,6 +67,7 @@ function toSession(id: string, d: DocumentData): Session {
     note: d.note || undefined,
     autoStopped: !!d.autoStopped,
     pauses: toPauses(d.pauses),
+    calendar: toCalendar(d.calendar),
   };
 }
 
@@ -132,9 +140,11 @@ function timerDocData(timer: ActiveTimer) {
  * Eine Sitzung für den ganzen Timer. Wird er während einer Pause beendet,
  * endet die Sitzung mit dem Pausenbeginn.
  */
-function sessionFromTimer(timer: ActiveTimer, end: number, note?: string, autoStopped = false) {
+function sessionFromTimer(timer: ActiveTimer, end: number, calendar: boolean, note?: string, autoStopped = false) {
   const stop = Math.max(timer.startedAt, Math.min(end, timer.pausedAt ?? end));
   return {
+    // Bei aktivem Kalender-Sync: zunächst „nicht synchronisiert“, die Übertragung folgt danach.
+    ...(calendar ? { calendar: { eventId: timerEventId(timer.startedAt), synced: false } } : {}),
     questId: timer.questId,
     title: timer.title,
     start: ts(timer.startedAt),
@@ -145,6 +155,21 @@ function sessionFromTimer(timer: ActiveTimer, end: number, note?: string, autoSt
   };
 }
 
+type Batch = ReturnType<typeof writeBatch>;
+
+function queueCalendarDelete(batch: Batch, uid: string, eventId: string) {
+  batch.set(doc(calendarDeletesCol(uid), eventId), { createdAt: serverTimestamp() });
+}
+
+/**
+ * Schreibt die Sitzung eines Timers. Eine noch ausstehende Löschung desselben Termins
+ * (nach „Rückgängig“) wird verworfen, sonst würde sie den neuen Termin entfernen.
+ */
+function writeTimerSession(batch: Batch, uid: string, timer: ActiveTimer, data: DocumentData, calendar: boolean) {
+  batch.set(doc(sessionsCol(uid), timerSessionId(timer.startedAt)), data);
+  if (calendar) batch.delete(doc(calendarDeletesCol(uid), timerEventId(timer.startedAt)));
+}
+
 /**
  * Startet einen Timer. Läuft schon einer (auch pausiert), wird er im selben Batch als Sitzung
  * gespeichert. Batch statt Transaktion, damit es auch offline funktioniert.
@@ -153,10 +178,11 @@ export async function startTimer(
   uid: string,
   current: ActiveTimer | null,
   next: { questId: string | null; title: string },
+  calendar = false,
 ): Promise<void> {
   const now = Date.now();
   const batch = writeBatch(db);
-  if (current) batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, now));
+  if (current) writeTimerSession(batch, uid, current, sessionFromTimer(current, now, calendar), calendar);
   batch.set(activeTimerDoc(uid), timerDocData({ ...next, startedAt: now, pausedAt: null, pauses: [] }));
   await batch.commit();
 }
@@ -174,9 +200,9 @@ export async function resumeTimer(uid: string, current: ActiveTimer): Promise<vo
   await setDoc(activeTimerDoc(uid), timerDocData({ ...current, pausedAt: null, pauses: [...current.pauses, pause] }));
 }
 
-export async function stopTimer(uid: string, current: ActiveTimer, note?: string): Promise<void> {
+export async function stopTimer(uid: string, current: ActiveTimer, note?: string, calendar = false): Promise<void> {
   const batch = writeBatch(db);
-  batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, Date.now(), note));
+  writeTimerSession(batch, uid, current, sessionFromTimer(current, Date.now(), calendar, note), calendar);
   batch.delete(activeTimerDoc(uid));
   await batch.commit();
 }
@@ -185,9 +211,11 @@ export async function stopTimer(uid: string, current: ActiveTimer, note?: string
  * Macht Stopp oder Wechsel rückgängig: Die gerade gespeicherte Sitzung wird gelöscht und
  * der vorherige Timer läuft mit Startzeit und Pausen weiter (bzw. steht wieder pausiert da).
  */
-export async function restoreTimer(uid: string, previous: ActiveTimer): Promise<void> {
+export async function restoreTimer(uid: string, previous: ActiveTimer, calendar = false): Promise<void> {
   const batch = writeBatch(db);
   batch.delete(doc(sessionsCol(uid), timerSessionId(previous.startedAt)));
+  // Ein evtl. schon angelegter Termin muss wieder weg.
+  if (calendar) queueCalendarDelete(batch, uid, timerEventId(previous.startedAt));
   batch.set(activeTimerDoc(uid), timerDocData(previous));
   await batch.commit();
 }
@@ -196,13 +224,13 @@ export async function restoreTimer(uid: string, previous: ActiveTimer): Promise<
  * Kappt einen vergessenen Timer nach 8 h Arbeitszeit (Pausen zählen nicht).
  * Pausiert läuft keine Zeit, dann wird nichts gekappt. Gibt true zurück, wenn gekappt wurde.
  */
-export async function autoStopIfNeeded(uid: string, current: ActiveTimer | null): Promise<boolean> {
+export async function autoStopIfNeeded(uid: string, current: ActiveTimer | null, calendar = false): Promise<boolean> {
   if (!current || current.pausedAt !== null) return false;
   const now = Date.now();
   const end = autoStopEnd(current.startedAt, now, pausedMsIn(current.pauses, current.startedAt, now));
   if (end === null) return false;
   const batch = writeBatch(db);
-  batch.set(doc(sessionsCol(uid), timerSessionId(current.startedAt)), sessionFromTimer(current, end, undefined, true));
+  writeTimerSession(batch, uid, current, sessionFromTimer(current, end, calendar, undefined, true), calendar);
   batch.delete(activeTimerDoc(uid));
   await batch.commit();
   return true;
@@ -236,7 +264,11 @@ export function watchQuestSessions(uid: string, questId: string, n: number, cb: 
 
 export type SessionInput = Omit<Session, 'id' | 'autoStopped' | 'pauses'> & { pauses?: Pause[] };
 
-export async function saveSession(uid: string, id: string | null, s: SessionInput): Promise<void> {
+/**
+ * Speichert eine Sitzung. Mit aktivem Kalender-Sync wird sie als „nicht synchronisiert“ markiert
+ * (bestehende Event-ID bleibt). Ohne Sync bleibt ein vorhandener Kalender-Bezug unverändert.
+ */
+export async function saveSession(uid: string, id: string | null, s: SessionInput, calendar = false): Promise<void> {
   if (s.end <= s.start) throw new Error('Das Ende muss nach dem Start liegen.');
   const data = {
     questId: s.questId,
@@ -247,12 +279,27 @@ export async function saveSession(uid: string, id: string | null, s: SessionInpu
     pauses: fromPauses(clampPauses(s.pauses, s.start, s.end)),
     note: s.note?.trim() || null,
     autoStopped: false,
+    ...(calendar
+      ? { calendar: { eventId: s.calendar?.eventId ?? randomEventId(), synced: false } }
+      : s.calendar
+        ? { calendar: s.calendar }
+        : {}),
   };
   if (id) await setDoc(doc(sessionsCol(uid), id), data);
   else await addDoc(sessionsCol(uid), data);
 }
 
-export const deleteSession = (uid: string, id: string) => deleteDoc(doc(sessionsCol(uid), id));
+/** Löscht eine Sitzung; mit aktivem Sync wird die Löschung des Termins vorgemerkt. */
+export async function deleteSession(
+  uid: string,
+  session: Pick<Session, 'id' | 'calendar'>,
+  calendar = false,
+): Promise<void> {
+  const batch = writeBatch(db);
+  batch.delete(doc(sessionsCol(uid), session.id));
+  if (calendar && session.calendar) queueCalendarDelete(batch, uid, session.calendar.eventId);
+  await batch.commit();
+}
 
 /* ---------- Wochenreflexion ---------- */
 

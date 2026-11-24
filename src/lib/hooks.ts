@@ -3,6 +3,7 @@ import type { Unsubscribe } from 'firebase/firestore';
 import { useEffect, useState } from 'preact/hooks';
 import { auth } from './firebase';
 import { autoStopIfNeeded, watchActiveTimer } from './db';
+import { calendarEnabled, calendarSettingsReady } from './gcal';
 import type { ActiveTimer } from './types';
 
 /** undefined = lädt noch, null = abgemeldet. */
@@ -37,7 +38,11 @@ export function useActiveTimer(uid: string): ActiveTimer | null | undefined {
   const timer = useLive<ActiveTimer | null>((cb) => watchActiveTimer(uid, cb), [uid]);
   useEffect(() => {
     if (!timer) return;
-    const check = () => void autoStopIfNeeded(uid, timer).catch(console.error);
+    // Ohne Klick kein Token: gekappte Sitzung nur als „nicht im Kalender“ markieren.
+    const check = () =>
+      void calendarSettingsReady(uid)
+        .then(() => autoStopIfNeeded(uid, timer, calendarEnabled(uid)))
+        .catch(console.error);
     check();
     // Auch bei dauerhaft geöffneter App: regelmäßig prüfen.
     const id = setInterval(check, 60_000);

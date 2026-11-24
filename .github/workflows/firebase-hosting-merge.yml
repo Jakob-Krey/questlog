@@ -15,15 +15,20 @@ jobs:
           cache: npm
       - run: npm ci
       - name: .env aus Secret schreiben
-        run: printf '%s\n' "$FIREBASE_ENV" > .env
+        run: |
+          printf '%s\n' "$FIREBASE_ENV" > .env
+          # OAuth-Client-ID für den Kalender-Sync liegt in einem eigenen Secret.
+          printf 'PUBLIC_GOOGLE_OAUTH_CLIENT_ID=%s\n' "$GOOGLE_OAUTH_CLIENT_ID" >> .env
         env:
           FIREBASE_ENV: ${{ secrets.FIREBASE_ENV }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_OAUTH_CLIENT_ID }}
       - name: Firebase-Config prüfen (ohne Werte auszugeben)
         run: |
           for k in PUBLIC_FIREBASE_API_KEY PUBLIC_FIREBASE_AUTH_DOMAIN PUBLIC_FIREBASE_PROJECT_ID PUBLIC_FIREBASE_STORAGE_BUCKET PUBLIC_FIREBASE_MESSAGING_SENDER_ID PUBLIC_FIREBASE_APP_ID; do
             grep -Eq "^${k}=.+" .env || { echo "::error::$k fehlt oder ist leer (Secret FIREBASE_ENV)"; exit 1; }
           done
           echo "Firebase-Config vollständig: 6/6 Variablen gesetzt"
+          grep -Eq "^PUBLIC_GOOGLE_OAUTH_CLIENT_ID=.+" .env || { echo "::error::PUBLIC_GOOGLE_OAUTH_CLIENT_ID fehlt oder ist leer (Secret PUBLIC_GOOGLE_OAUTH_CLIENT_ID)"; exit 1; }
       - run: npm test
       - run: npm run test:rules
       - run: npm run build

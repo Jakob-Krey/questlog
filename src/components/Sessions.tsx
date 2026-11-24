@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { deleteSession, saveSession, watchQuests, watchSessionsInRange, type SessionInput } from '../lib/db';
+import { calendarEnabled, syncFromClick } from '../lib/gcal';
 import { useLive } from '../lib/hooks';
 import { reportError } from '../lib/notify';
 import { HOUR, formatDuration, fromLocalInput, overlapMs, pausedMsIn, periodRange, toLocalInput, workedMs } from '../lib/time';
@@ -74,6 +75,11 @@ function SessionRow({ uid, session, quests, label }: { uid: string; session: Ses
         <strong>{label || 'Ohne Quest'}</strong>
         {!session.questId && <span class="badge">ohne Quest</span>}
         {session.autoStopped && <span class="badge">automatisch gestoppt</span>}
+        {session.calendar && !session.calendar.synced && (
+          <span class="badge" title="Wird beim nächsten Stopp oder in den Einstellungen übertragen">
+            nicht im Kalender
+          </span>
+        )}
         <br />
         <span class="muted">
           {new Date(session.start).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })}{' '}
@@ -97,7 +103,7 @@ interface FormProps {
   uid: string;
   id?: string;
   quests: Quest[];
-  initial: SessionInput;
+  initial: SessionInput & { calendar?: Session['calendar'] };
   onDone: () => void;
 }
 
@@ -133,7 +139,9 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
           end: en,
           note,
           pauses: initial.pauses,
-        }).catch((err) => reportError('Speichern der Sitzung', err));
+          calendar: initial.calendar,
+        }, calendarEnabled(uid)).catch((err) => reportError('Speichern der Sitzung', err));
+        syncFromClick(uid);
         onDone();
       }}
     >
@@ -184,7 +192,10 @@ function SessionForm({ uid, id, quests, initial, onDone }: FormProps) {
             class="link danger-text"
             onClick={() => {
               if (!confirm('Sitzung löschen?')) return;
-              deleteSession(uid, id).catch((err) => reportError('Löschen der Sitzung', err));
+              deleteSession(uid, { id, calendar: initial.calendar }, calendarEnabled(uid)).catch((err) =>
+                reportError('Löschen der Sitzung', err),
+              );
+              syncFromClick(uid);
               onDone();
             }}
           >
