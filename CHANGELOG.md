@@ -127,3 +127,14 @@
 - Beide Workflows hängen das Secret PUBLIC_GOOGLE_OAUTH_CLIENT_ID an die aus FIREBASE_ENV erzeugte .env an.
 - Die Prüfung bricht jetzt mit Fehler ab, wenn die ID fehlt (vorher nur Warnung), damit kein Live-Deploy ohne funktionierenden Kalender-Sync rausgeht.
 - Offen: Ende-zu-Ende-Test mit echtem Google-Konto; Google-Popup in der installierten iOS-PWA prüfen; Änderungen noch nicht committet. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-24 17:52 – Kalender-Sync live
+- Commit ad6cb39 auf main gepusht; Deploy-Workflow erfolgreich (Tests, Rules-Tests, Build, Rules/Indexes, Hosting). Das Secret PUBLIC_GOOGLE_OAUTH_CLIENT_ID kommt in der CI an.
+- Nicht committet: fremde, nicht getrackte Ordner (.codex/, .github/agents|hooks|skills, skills-lock.json, .claude/…).
+- Offen: Ende-zu-Ende-Test auf der Live-Seite; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-24 17:53 – .gitignore: lokale Agent-Tools ausgeschlossen
+- .gitignore: .agents/, .codex/, .claude/skills/* (außer dem eigenen Skill umsetzungsstand), .claude/agents/impeccable-*, .github/agents/impeccable-*, .github/hooks/impeccable.json und .github/skills/impeccable/ werden ignoriert. Das sind lokal installierte Skills und Hooks (Firebase, Impeccable), die sich pro Rechner neu installieren lassen.
+- .env geprüft: weiterhin ignoriert und nie committet; nur .env.example ist im Repo.
+- skills-lock.json bewusst weder ignoriert noch committet: Entscheidung steht noch aus.
+- Offen: Entscheidung zu skills-lock.json; Ende-zu-Ende-Test Kalender-Sync auf der Live-Seite; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

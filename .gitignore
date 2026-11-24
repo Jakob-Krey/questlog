@@ -9,3 +9,13 @@ dist/
 *-debug.log
 CLAUDE.local.md
 .claude/settings.local.json
+
+# Lokal installierte Agent-Skills/Hooks (Firebase, Impeccable) – pro Rechner neu installierbar
+.agents/
+.codex/
+.claude/agents/impeccable-*
+.claude/skills/*
+!.claude/skills/umsetzungsstand/
+.github/agents/impeccable-*
+.github/hooks/impeccable.json
+.github/skills/impeccable/
