@@ -11,7 +11,7 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 **Quests**
 - Name, SMART-Ziel (Text), Wochenstunden-Soll, Status aktiv / pausiert / archiviert. Kein Enddatum.
 - Anlegen, bearbeiten, pausieren, archivieren. Archivierte Quests verschwinden aus der Übersicht, ihre Zeiten bleiben in der Auswertung.
-- Meilensteine pro Quest: anlegen, umsortieren, abhaken, löschen – ohne Enddatum. Meilensteine sind unabhängig voneinander (keine Nummerierung). Jeder Meilenstein kann Schritte haben (eine Ebene): eine nummerierte Reihenfolge 1, 2, 3 … zum Erreichen des Meilensteins; anlegen, umsortieren, abhaken, löschen (Entscheidung 2026-11-26).
+- Meilensteine pro Quest: anlegen, umsortieren, abhaken, löschen – ohne Enddatum. Meilensteine sind unabhängig voneinander (keine Nummerierung). Jeder Meilenstein kann Schritte haben (eine Ebene): eine nummerierte Reihenfolge 1, 2, 3 … zum Erreichen des Meilensteins, überall von unten nach oben angezeigt (Schritt 1 ganz unten, der Meilenstein als Ziel ganz oben); anlegen, umsortieren, abhaken, löschen (Entscheidung 2026-11-26).
 
 **Timer**
 - Es läuft immer nur ein Timer. Solange er läuft oder pausiert ist, lassen sich andere Quests nicht starten; gewechselt wird nur per Stopp und neuem Start (Entscheidung 2026-11-26, ersetzt das automatische Wechseln).
@@ -24,7 +24,7 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 
 **Übersicht & Auswertung**
 - Übersicht: nur die aktiven Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus) und Start-/Pause-/Stopp-Button, dazu „Neue Quest“. Klick auf eine Karte oder auf Start öffnet die Quest-Seite (Start startet zugleich die Zeit). Die Karten zeigen keine Meilensteine.
-- Quest-Seite: ablenkungsfrei ohne Navigation und Timer-Leiste, Ziel, Wochenstand (Ist, Soll, noch übrig) mit Fortschrittsbalken, Meilensteine (fett) mit ihren Schritten (auf breiten Bildschirmen als Reihe 1 → 2 → 3, mobil untereinander) und ggf. laufende Uhr mit Notiz, Pause und Stopp. Meilensteine und Schritte lassen sich dort abhaken, auch während der Timer läuft; sonst nichts bearbeitbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (eigene Seite für Quest-Daten und Meilensteine). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
+- Quest-Seite: ablenkungsfrei ohne Navigation und Timer-Leiste, Ziel, Wochenstand (Ist, Soll, noch übrig) mit Fortschrittsbalken, Meilensteine (fett) mit ihren Schritten (immer untereinander) und ggf. laufende Uhr mit Notiz, Pause und Stopp. Meilensteine und Schritte lassen sich dort abhaken, auch während der Timer läuft; sonst nichts bearbeitbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (eigene Seite für Quest-Daten und Meilensteine). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
 - Auswertung: Zeit pro Quest für Woche / Monat / Quartal; ältere freie Sitzungen erscheinen, falls vorhanden, gesammelt als „Ohne Quest“.
 
 **Wochenreflexion**

@@ -897,29 +897,6 @@ main.focus {
   border-left: 2px solid var(--border);
   font-size: 0.95rem;
 }
-/* Auf breiten Bildschirmen laufen die Schritte als Reihe 1 → 2 → 3. */
-@media (min-width: 720px) {
-  .focus-steps {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    row-gap: 4px;
-    margin: 2px 0 6px 28px;
-    padding-left: 0;
-    border-left: none;
-  }
-  .focus-steps > li {
-    display: flex;
-    align-items: center;
-  }
-  .focus-steps > li + li::before {
-    content: '';
-    width: 24px;
-    height: 2px;
-    margin: 0 10px;
-    background: var(--border);
-  }
-}
 .focus-actions {
   display: flex;
   flex-wrap: wrap;

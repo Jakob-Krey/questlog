@@ -271,8 +271,7 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
   const [adding, setAdding] = useState(false);
   const [text, setText] = useState('');
   const steps = milestone.steps;
-  const move = (i: number, delta: number) => {
-    const j = i + delta;
+  const swap = (i: number, j: number) => {
     if (j < 0 || j >= steps.length) return;
     const next = steps.slice();
     [next[i], next[j]] = [next[j], next[i]];
@@ -280,54 +279,7 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
   };
   return (
     <div class="steps">
-      {steps.length > 0 && (
-        // Unterschritte sind eine Reihenfolge (1, 2, 3 …) auf dem Weg zum Meilenstein.
-        <ol class="plain step-list" aria-label={`Schritte zu „${milestone.text}“`}>
-          {steps.map((st, i) => (
-            <li key={st.id} class={st.done ? 'done' : ''}>
-              <span class="step-num" aria-hidden="true">
-                {i + 1}.
-              </span>
-              <label class="check">
-                <input
-                  type="checkbox"
-                  checked={st.done}
-                  onChange={() => onChange(steps.map((x) => (x.id === st.id ? { ...x, done: !x.done } : x)))}
-                />
-                <span>{st.text}</span>
-              </label>
-              <span class="row tight">
-                <button
-                  class="icon"
-                  title="Nach oben"
-                  aria-label={`Schritt „${st.text}“ nach oben`}
-                  disabled={i === 0}
-                  onClick={() => move(i, -1)}
-                >
-                  <Icon name="arrow-up" />
-                </button>
-                <button
-                  class="icon"
-                  title="Nach unten"
-                  aria-label={`Schritt „${st.text}“ nach unten`}
-                  disabled={i === steps.length - 1}
-                  onClick={() => move(i, 1)}
-                >
-                  <Icon name="arrow-down" />
-                </button>
-                <button
-                  class="icon"
-                  title="Löschen"
-                  aria-label={`Schritt „${st.text}“ löschen`}
-                  onClick={() => onChange(steps.filter((x) => x.id !== st.id))}
-                >
-                  <Icon name="x" />
-                </button>
-              </span>
-            </li>
-          ))}
-        </ol>
-      )}
+      {/* Neue Schritte bekommen die nächste Nummer und stehen damit oben. */}
       {adding ? (
         <form
           class="row"
@@ -353,6 +305,58 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
         <button class="link add-step" onClick={() => setAdding(true)}>
           + Schritt
         </button>
+      )}
+      {steps.length > 0 && (
+        // Aufstieg zum Meilenstein: Schritt 1 ganz unten, der höchste direkt unter dem Meilenstein.
+        <ol reversed class="plain step-list" aria-label={`Schritte zu „${milestone.text}“`}>
+          {steps
+            .map((st, i) => ({ st, i }))
+            .reverse()
+            .map(({ st, i }) => (
+              <li key={st.id} class={st.done ? 'done' : ''}>
+                <span class="step-num" aria-hidden="true">
+                  {i + 1}.
+                </span>
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    checked={st.done}
+                    onChange={() => onChange(steps.map((x) => (x.id === st.id ? { ...x, done: !x.done } : x)))}
+                  />
+                  <span>{st.text}</span>
+                </label>
+                <span class="row tight">
+                  {/* Optisch oben = höhere Nummer. */}
+                  <button
+                    class="icon"
+                    title="Nach oben"
+                    aria-label={`Schritt „${st.text}“ nach oben`}
+                    disabled={i === steps.length - 1}
+                    onClick={() => swap(i, i + 1)}
+                  >
+                    <Icon name="arrow-up" />
+                  </button>
+                  <button
+                    class="icon"
+                    title="Nach unten"
+                    aria-label={`Schritt „${st.text}“ nach unten`}
+                    disabled={i === 0}
+                    onClick={() => swap(i, i - 1)}
+                  >
+                    <Icon name="arrow-down" />
+                  </button>
+                  <button
+                    class="icon"
+                    title="Löschen"
+                    aria-label={`Schritt „${st.text}“ löschen`}
+                    onClick={() => onChange(steps.filter((x) => x.id !== st.id))}
+                  >
+                    <Icon name="x" />
+                  </button>
+                </span>
+              </li>
+            ))}
+        </ol>
       )}
     </div>
   );

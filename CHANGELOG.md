@@ -186,3 +186,12 @@
 - QuestFocus.tsx: Fortschrittsbalken unter dem Wochenstand; Meilensteine (fett) und Schritte per Klick abhakbar (auch bei laufendem Timer), neue Komponente Tick.
 - global.css: Schritte ab 720 px Breite horizontal als Reihe mit Verbindungslinien, mobil weiter untereinander. Layout mit statischer Testseite geprüft. sw.js Cache v10, konzept.md angepasst.
 - Offen: Quest-Seite (Abhaken, Fortschritt, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 21:05 – Quest-Seite mit Abhaken live
+- Commit f7edce7 auf main gepusht; Deploy-Workflow erfolgreich.
+- Offen: Quest-Seite (Abhaken, Fortschritt, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 21:16 – Schritte von unten nach oben, keine horizontale Reihe
+- QuestFocus.tsx, QuestEdit.tsx: Schritte werden umgekehrt angezeigt (`<ol reversed>`): Schritt 1 ganz unten, der Meilenstein ganz oben. Gespeicherte Reihenfolge bleibt unverändert; die Pfeile auf der Bearbeiten-Seite wirken optisch (oben = höhere Nummer), „+ Schritt“ steht jetzt über den Schritten.
+- global.css: horizontale Desktop-Reihe wieder entfernt (Wunsch Jakob). sw.js Cache v11, konzept.md angepasst.
+- Offen: Quest-Seite (Abhaken, Fortschritt, Reihenfolge, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

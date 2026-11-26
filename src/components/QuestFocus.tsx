@@ -120,12 +120,16 @@ function QuestFocus({ uid, timer }: PageProps) {
                 <Tick done={m.done} label={m.text} strong onToggle={() => toggle(m.id)} />
                 {/* Schritte nur bei offenen Meilensteinen, damit es übersichtlich bleibt. */}
                 {!m.done && m.steps.length > 0 && (
-                  <ol class="focus-steps" aria-label={`Schritte zu „${m.text}“`}>
-                    {m.steps.map((st, i) => (
-                      <li key={st.id}>
-                        <Tick done={st.done} label={st.text} num={i + 1} onToggle={() => toggle(m.id, st.id)} />
-                      </li>
-                    ))}
+                  // Aufstieg zum Ziel: Schritt 1 steht ganz unten, der Meilenstein ganz oben.
+                  <ol reversed class="focus-steps" aria-label={`Schritte zu „${m.text}“`}>
+                    {m.steps
+                      .map((st, i) => ({ st, n: i + 1 }))
+                      .reverse()
+                      .map(({ st, n }) => (
+                        <li key={st.id}>
+                          <Tick done={st.done} label={st.text} num={n} onToggle={() => toggle(m.id, st.id)} />
+                        </li>
+                      ))}
                   </ol>
                 )}
               </li>
