@@ -9,11 +9,11 @@ import Icon from './Icon';
 import Loading from './Loading';
 import Shell, { type PageProps } from './Shell';
 
-export default function QuestDetailPage() {
-  return <Shell page="quest">{(p) => <QuestDetail {...p} />}</Shell>;
+export default function QuestEditPage() {
+  return <Shell page="quest">{(p) => <QuestEdit {...p} />}</Shell>;
 }
 
-function QuestDetail({ uid, timer }: PageProps) {
+function QuestEdit({ uid, timer }: PageProps) {
   const id = new URLSearchParams(location.search).get('id') ?? '';
   const quest = useLive<Quest | null>((cb) => watchQuest(uid, id, cb), [uid, id]);
   const sessions = useLive<Session[]>((cb) => watchQuestSessions(uid, id, 20, cb), [uid, id]);
@@ -32,9 +32,9 @@ function QuestDetail({ uid, timer }: PageProps) {
   return (
     <>
       <p>
-        <a href="/" class="back-link">
+        <a href={`/quest?id=${quest.id}`} class="back-link">
           <Icon name="chevron-left" />
-          Übersicht
+          Zurück zur Quest
         </a>
       </p>
       <div class="row spread">

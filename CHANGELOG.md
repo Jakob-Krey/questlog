@@ -158,3 +158,13 @@
 - timerActions.ts, QuestDetail.tsx: Wechseln entfällt; solange ein Timer läuft oder pausiert ist, sind andere Start-Buttons gesperrt. Entscheidung: Wunsch Jakob, ein Wechsel nur bewusst per Stopp + Start.
 - types.ts/db.ts/QuestDetail.tsx: Meilensteine haben `steps` (eine Ebene, alte Daten ohne Feld → leer), auf der Detailseite anlegbar, abhakbar, löschbar. global.css (Fenster, Unterschritte, Karte klickbar), sw.js Cache v7, konzept.md angepasst.
 - Offen: Fenster und Unterschritte im Browser noch nicht getestet (lokal nur mit echtem Google-Login möglich); Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 19:45 – Quest-Fenster live
+- Commit c371da0 auf main gepusht; Deploy-Workflow erfolgreich.
+- Offen: Quest-Fenster, gesperrtes Wechseln und Unterschritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 20:05 – Quest-Seite statt Fenster, Karten ohne Meilensteine
+- Neu: QuestFocus.tsx unter /quest – ablenkungsfreie Seite (Shell mit `focus`: ohne Kopfzeile und Timer-Leiste) mit Ziel, Wochenstand, Meilensteinen/Unterschritten und laufender Uhr inkl. Notiz, Pause, Stopp; sonst Start und „Bearbeiten“.
+- Bearbeiten zieht nach /bearbeiten (QuestDetail.tsx → QuestEdit.tsx). Overview.tsx: Dialog entfernt, Karte öffnet /quest, Start öffnet /quest?…&start=1 und startet dort (damit der Seitenwechsel den Schreibvorgang nicht abbricht); Meilenstein-Zeile auf den Karten entfällt.
+- global.css, sw.js (Cache v8, /bearbeiten im Shell-Cache), konzept.md angepasst.
+- Offen: Quest-Seite, gesperrtes Wechseln und Unterschritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

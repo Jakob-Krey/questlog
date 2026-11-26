@@ -25,14 +25,16 @@ export interface PageProps {
 
 interface Props {
   page: Page;
+  /** Ablenkungsfrei: ohne Kopfzeile, Navigation und Timer-Leiste. */
+  focus?: boolean;
   children: (props: PageProps) => ComponentChildren;
 }
 
-export default function Shell({ page, children }: Props) {
+export default function Shell({ page, focus, children }: Props) {
   const user = useAuth();
   if (user === undefined) return <Loading center />;
   if (user === null) return <Login />;
-  return <SignedIn user={user} page={page} children={children} />;
+  return <SignedIn user={user} page={page} focus={focus} children={children} />;
 }
 
 function Login() {
@@ -64,16 +66,16 @@ function Login() {
   );
 }
 
-function SignedIn({ user, page, children }: { user: User } & Props) {
+function SignedIn({ user, page, focus, children }: { user: User } & Props) {
   // Kalender-Einstellungen live halten: Klick-Handler brauchen sie synchron.
   useEffect(() => watchCalendarSettings(user.uid), [user.uid]);
   const timer = useActiveTimer(user.uid);
   const online = useOnline();
   return (
     <>
-      <AppHeader page={page} online={online} email={user.email ?? ''} />
-      {timer && <TimerBar uid={user.uid} timer={timer} />}
-      <main>{timer === undefined ? <Loading /> : children({ uid: user.uid, timer })}</main>
+      {!focus && <AppHeader page={page} online={online} email={user.email ?? ''} />}
+      {!focus && timer && <TimerBar uid={user.uid} timer={timer} />}
+      <main class={focus ? 'focus' : undefined}>{timer === undefined ? <Loading /> : children({ uid: user.uid, timer })}</main>
       <Notices />
     </>
   );

@@ -1,4 +1,4 @@
-# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar; 2026-11-24: Google-Kalender-Sync; 2026-11-26: kein Plan-Hinweis auf den Karten, Quest-Fenster, kein Wechseln, Unterschritte)
+# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar; 2026-11-24: Google-Kalender-Sync; 2026-11-26: kein Plan-Hinweis auf den Karten, Quest-Seite, kein Wechseln, Unterschritte)
 
 Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART-Ziele mit Meilensteinen, bewusst ohne Enddaten. Zeit wird ausschließlich pro Quest gemessen; freie Timer ohne Quest gibt es nicht (mehr).
 
@@ -23,7 +23,8 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 - Vergessener Timer wird nach 8 Stunden gekappt (beim nächsten Öffnen der App; Spark-Plan hat keine Cloud Functions). Ende = Start + 8 h.
 
 **Übersicht & Auswertung**
-- Übersicht: nur die aktiven Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus) und Start-/Pause-/Stopp-Button, dazu „Neue Quest“. Klick auf eine Karte oder auf Start öffnet das Quest-Fenster (Start startet zugleich die Zeit): nur Anzeige von Ziel, Wochenstand (Ist, Soll, noch übrig), Meilensteinen mit Unterschritten und ggf. laufender Uhr mit Pause/Stopp – nichts abhakbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (Detailseite). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
+- Übersicht: nur die aktiven Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus) und Start-/Pause-/Stopp-Button, dazu „Neue Quest“. Klick auf eine Karte oder auf Start öffnet die Quest-Seite (Start startet zugleich die Zeit). Die Karten zeigen keine Meilensteine.
+- Quest-Seite: ablenkungsfrei ohne Navigation und Timer-Leiste, nur Anzeige von Ziel, Wochenstand (Ist, Soll, noch übrig), Meilensteinen mit Unterschritten und ggf. laufender Uhr mit Notiz, Pause und Stopp – nichts abhakbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (eigene Seite für Quest-Daten und Meilensteine). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
 - Auswertung: Zeit pro Quest für Woche / Monat / Quartal; ältere freie Sitzungen erscheinen, falls vorhanden, gesammelt als „Ohne Quest“.
 
 **Wochenreflexion**
