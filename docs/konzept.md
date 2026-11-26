@@ -1,4 +1,4 @@
-# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar; 2026-11-24: Google-Kalender-Sync; 2026-11-26: kein Plan-Hinweis auf den Karten)
+# Questlog – Konzept (freigegeben 2026-11-21, geändert 2026-11-21: freier Timer entfällt; 2026-11-23: Timer pausierbar; 2026-11-24: Google-Kalender-Sync; 2026-11-26: kein Plan-Hinweis auf den Karten, Quest-Fenster, kein Wechseln, Unterschritte)
 
 Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART-Ziele mit Meilensteinen, bewusst ohne Enddaten. Zeit wird ausschließlich pro Quest gemessen; freie Timer ohne Quest gibt es nicht (mehr).
 
@@ -11,10 +11,10 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 **Quests**
 - Name, SMART-Ziel (Text), Wochenstunden-Soll, Status aktiv / pausiert / archiviert. Kein Enddatum.
 - Anlegen, bearbeiten, pausieren, archivieren. Archivierte Quests verschwinden aus der Übersicht, ihre Zeiten bleiben in der Auswertung.
-- Meilensteine pro Quest: anlegen, umsortieren, abhaken, löschen – ohne Enddatum.
+- Meilensteine pro Quest: anlegen, umsortieren, abhaken, löschen – ohne Enddatum. Jeder Meilenstein kann Unterschritte haben (eine Ebene; anlegen, abhaken, löschen; Entscheidung 2026-11-26).
 
 **Timer**
-- Es läuft immer nur ein Timer. Ein neuer Start beendet den laufenden automatisch (als Sitzung gespeichert).
+- Es läuft immer nur ein Timer. Solange er läuft oder pausiert ist, lassen sich andere Quests nicht starten; gewechselt wird nur per Stopp und neuem Start (Entscheidung 2026-11-26, ersetzt das automatische Wechseln).
 - Timer nur für Quests. Kein freier Timer (Entscheidung 2026-11-21); ältere freie Sitzungen bleiben erhalten.
 - Laufender Timer ist live auf allen Geräten sichtbar und von jedem Gerät stoppbar.
 - Stopp speichert eine Sitzung (Start, Ende, optionale Notiz).
@@ -23,7 +23,7 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 - Vergessener Timer wird nach 8 Stunden gekappt (beim nächsten Öffnen der App; Spark-Plan hat keine Cloud Functions). Ende = Start + 8 h.
 
 **Übersicht & Auswertung**
-- Übersicht: nur die aktiven Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus) und Start-/Wechseln-/Stopp-Button, dazu „Neue Quest“. Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
+- Übersicht: nur die aktiven Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus) und Start-/Pause-/Stopp-Button, dazu „Neue Quest“. Klick auf eine Karte oder auf Start öffnet das Quest-Fenster (Start startet zugleich die Zeit): nur Anzeige von Ziel, Wochenstand (Ist, Soll, noch übrig), Meilensteinen mit Unterschritten und ggf. laufender Uhr mit Pause/Stopp – nichts abhakbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (Detailseite). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
 - Auswertung: Zeit pro Quest für Woche / Monat / Quartal; ältere freie Sitzungen erscheinen, falls vorhanden, gesammelt als „Ohne Quest“.
 
 **Wochenreflexion**
@@ -53,7 +53,7 @@ users/{uid}
 │    calendarSync: { enabled, calendarId | null }
 ├─ quests/{questId}
 │    name, goal, weeklyHours, status: "active"|"paused"|"archived",
-│    milestones: [{ id, text, done, order }],
+│    milestones: [{ id, text, done, order, steps: [{ id, text, done }] }],
 │    todoistLabel? (optional, erst später genutzt), createdAt, updatedAt
 ├─ sessions/{sessionId}
 │    questId | null (null nur bei alten freien Sitzungen), title, start, end, pauses: [{ start, end }], note?, autoStopped,

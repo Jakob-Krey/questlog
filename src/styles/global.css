@@ -138,7 +138,8 @@ label {
   flex: 1;
 }
 
-button {
+button,
+a.button {
   border: 1px solid var(--border);
   background: var(--surface);
   border-radius: 8px;
@@ -150,7 +151,12 @@ button {
   justify-content: center;
   gap: 6px;
 }
-button:hover:not(:disabled) {
+a.button {
+  text-decoration: none;
+  line-height: 1.5;
+}
+button:hover:not(:disabled),
+a.button:hover {
   border-color: var(--muted);
 }
 button:disabled {
@@ -433,7 +439,17 @@ header.top {
 .card.is-paused {
   border-color: var(--accent);
 }
+.card {
+  cursor: pointer;
+}
 .card-title {
+  /* Button ohne Button-Optik, damit die Karte wie bisher aussieht. */
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  white-space: normal;
+  justify-content: flex-start;
   font-weight: 700;
   font-size: 1.1rem;
   line-height: 1.3;
@@ -572,7 +588,38 @@ header.top {
   padding-left: 0;
   list-style: none;
 }
-.milestones li,
+.milestones > li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.milestone-row,
+.steps li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.steps {
+  margin-left: 28px;
+}
+.steps ul.plain {
+  margin: 4px 0 0;
+}
+.steps li {
+  padding: 2px 0;
+}
+.steps .check {
+  font-size: 0.95rem;
+}
+.add-step {
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+.steps li.done span,
+.milestones li.done > .milestone-row span {
+  text-decoration: line-through;
+  color: var(--muted);
+}
 .sessions li {
   display: flex;
   justify-content: space-between;
@@ -601,10 +648,7 @@ header.top {
   height: 18px;
   accent-color: var(--accent);
 }
-.milestones li.done span {
-  text-decoration: line-through;
-  color: var(--muted);
-}
+
 
 /* ---------- Auswertung ---------- */
 
@@ -727,4 +771,120 @@ table.stats tfoot td {
   .bar-cell {
     display: none;
   }
+}
+
+/* ---------- Quest-Fenster ---------- */
+
+.quest-window {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+}
+.quest-window::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+.qw-inner {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.qw-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.qw-head h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.qw-clock {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.qw-clock .muted {
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+.qw-week,
+.qw-goal {
+  margin: 0;
+}
+.qw-week {
+  font-variant-numeric: tabular-nums;
+}
+.qw-goal {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.quest-window h3 {
+  margin: 4px 0 6px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.qw-milestones,
+.qw-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.qw-milestones > li,
+.qw-steps > li {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+.qw-steps {
+  margin-top: 2px;
+  font-size: 0.92rem;
+}
+.qw-steps > li {
+  padding: 2px 0;
+}
+.qw-mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+  font-size: 0.7rem;
+  line-height: 13px;
+  text-align: center;
+  color: var(--accent-text);
+}
+.qw-steps .qw-mark {
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  font-size: 0.55rem;
+  line-height: 9px;
+}
+li.done > .qw-mark {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+li.done > .qw-mark + span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.qw-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
 }

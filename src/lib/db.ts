@@ -45,7 +45,9 @@ function toQuest(id: string, d: DocumentData): Quest {
     goal: d.goal ?? '',
     weeklyHours: Number(d.weeklyHours ?? 0),
     status: (d.status ?? 'active') as QuestStatus,
-    milestones: ((d.milestones ?? []) as Milestone[]).slice().sort((a, b) => a.order - b.order),
+    milestones: ((d.milestones ?? []) as Milestone[])
+      .map((m) => ({ ...m, steps: m.steps ?? [] }))
+      .sort((a, b) => a.order - b.order),
     todoistLabel: d.todoistLabel,
     createdAt: ms(d.createdAt),
     updatedAt: ms(d.updatedAt),

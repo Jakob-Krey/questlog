@@ -4,11 +4,19 @@ export type { Pause };
 
 export type QuestStatus = 'active' | 'paused' | 'archived';
 
+/** Unterschritt eines Meilensteins (nur eine Ebene). */
+export interface Step {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface Milestone {
   id: string;
   text: string;
   done: boolean;
   order: number;
+  steps: Step[];
 }
 
 export interface Quest {

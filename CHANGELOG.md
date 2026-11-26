@@ -152,3 +152,9 @@
 - stats.ts: ungenutztes behindMs samt Test entfernt; global.css: .meta.pace-done entfernt; sw.js Cache v6.
 - konzept.md: „Stand gegen den Wochenplan“ gestrichen (Entscheidung 2026-11-26, Wunsch Jakob).
 - Offen: Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 19:40 – Quest-Fenster, kein Wechseln, Unterschritte
+- Overview.tsx: Klick auf eine Karte öffnet ein schlichtes Fenster (`<dialog>`) mit Ziel, Wochenstand inkl. „noch übrig“, Meilensteinen und Unterschritten (nur Anzeige). Start startet sofort und öffnet das Fenster; läuft die Quest, zeigt es die Uhr mit Pause/Stopp, sonst Start und „Bearbeiten“ (→ /quest).
+- timerActions.ts, QuestDetail.tsx: Wechseln entfällt; solange ein Timer läuft oder pausiert ist, sind andere Start-Buttons gesperrt. Entscheidung: Wunsch Jakob, ein Wechsel nur bewusst per Stopp + Start.
+- types.ts/db.ts/QuestDetail.tsx: Meilensteine haben `steps` (eine Ebene, alte Daten ohne Feld → leer), auf der Detailseite anlegbar, abhakbar, löschbar. global.css (Fenster, Unterschritte, Karte klickbar), sw.js Cache v7, konzept.md angepasst.
+- Offen: Fenster und Unterschritte im Browser noch nicht getestet (lokal nur mit echtem Google-Login möglich); Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

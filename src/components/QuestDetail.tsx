@@ -4,7 +4,7 @@ import { useLive } from '../lib/hooks';
 import { reportError } from '../lib/notify';
 import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
 import { formatDuration, workedMs } from '../lib/time';
-import { STATUS_LABEL, type Milestone, type Quest, type QuestStatus, type Session } from '../lib/types';
+import { STATUS_LABEL, type Milestone, type Quest, type QuestStatus, type Session, type Step } from '../lib/types';
 import Icon from './Icon';
 import Loading from './Loading';
 import Shell, { type PageProps } from './Shell';
@@ -53,11 +53,17 @@ function QuestDetail({ uid, timer }: PageProps) {
         ) : (
           <button
             class="primary"
-            disabled={quest.status === 'archived'}
-            title={quest.status === 'archived' ? 'Archivierte Quests lassen sich nicht starten.' : undefined}
+            disabled={quest.status === 'archived' || !!timer}
+            title={
+              quest.status === 'archived'
+                ? 'Archivierte Quests lassen sich nicht starten.'
+                : timer
+                  ? `Erst „${timer.title || 'Timer'}“ stoppen.`
+                  : undefined
+            }
             onClick={() => startQuestTimer(uid, timer, quest)}
           >
-            {timer ? 'Wechseln' : 'Start'}
+            Start
           </button>
         )}
       </div>
@@ -184,6 +190,7 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
     updateQuest(uid, quest.id, { milestones: next.map((m, i) => ({ ...m, order: i })) }).catch((e) =>
       reportError('Speichern der Meilensteine', e),
     );
+  const patch = (id: string, change: (m: Milestone) => Milestone) => save(list.map((m) => (m.id === id ? change(m) : m)));
 
   const move = (i: number, delta: number) => {
     const j = i + delta;
@@ -200,42 +207,41 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
       <ol class="milestones">
         {list.map((m, i) => (
           <li key={m.id} class={m.done ? 'done' : ''}>
-            <label class="check">
-              <input
-                type="checkbox"
-                checked={m.done}
-                onChange={() => save(list.map((x) => (x.id === m.id ? { ...x, done: !x.done } : x)))}
-              />
-              <span>{m.text}</span>
-            </label>
-            <span class="row tight">
-              <button
-                class="icon"
-                title="Nach oben"
-                aria-label={`„${m.text}“ nach oben`}
-                disabled={i === 0}
-                onClick={() => move(i, -1)}
-              >
-                <Icon name="arrow-up" />
-              </button>
-              <button
-                class="icon"
-                title="Nach unten"
-                aria-label={`„${m.text}“ nach unten`}
-                disabled={i === list.length - 1}
-                onClick={() => move(i, 1)}
-              >
-                <Icon name="arrow-down" />
-              </button>
-              <button
-                class="icon"
-                title="Löschen"
-                aria-label={`„${m.text}“ löschen`}
-                onClick={() => confirm(`„${m.text}“ löschen?`) && save(list.filter((x) => x.id !== m.id))}
-              >
-                <Icon name="x" />
-              </button>
-            </span>
+            <div class="milestone-row">
+              <label class="check">
+                <input type="checkbox" checked={m.done} onChange={() => patch(m.id, (x) => ({ ...x, done: !x.done }))} />
+                <span>{m.text}</span>
+              </label>
+              <span class="row tight">
+                <button
+                  class="icon"
+                  title="Nach oben"
+                  aria-label={`„${m.text}“ nach oben`}
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  <Icon name="arrow-up" />
+                </button>
+                <button
+                  class="icon"
+                  title="Nach unten"
+                  aria-label={`„${m.text}“ nach unten`}
+                  disabled={i === list.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  <Icon name="arrow-down" />
+                </button>
+                <button
+                  class="icon"
+                  title="Löschen"
+                  aria-label={`„${m.text}“ löschen`}
+                  onClick={() => confirm(`„${m.text}“ löschen?`) && save(list.filter((x) => x.id !== m.id))}
+                >
+                  <Icon name="x" />
+                </button>
+              </span>
+            </div>
+            <Steps milestone={m} onChange={(steps) => patch(m.id, (x) => ({ ...x, steps }))} />
           </li>
         ))}
       </ol>
@@ -244,7 +250,7 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (!text.trim()) return;
-          save([...list, { id: crypto.randomUUID(), text: text.trim(), done: false, order: list.length }]);
+          save([...list, { id: crypto.randomUUID(), text: text.trim(), done: false, order: list.length, steps: [] }]);
           setText('');
         }}
       >
@@ -257,5 +263,66 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
         <button type="submit">Hinzufügen</button>
       </form>
     </section>
+  );
+}
+
+/** Unterschritte eines Meilensteins: abhaken, löschen, hinzufügen. */
+function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps: Step[]) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [text, setText] = useState('');
+  const steps = milestone.steps;
+  return (
+    <div class="steps">
+      {steps.length > 0 && (
+        <ul class="plain">
+          {steps.map((st) => (
+            <li key={st.id} class={st.done ? 'done' : ''}>
+              <label class="check">
+                <input
+                  type="checkbox"
+                  checked={st.done}
+                  onChange={() => onChange(steps.map((x) => (x.id === st.id ? { ...x, done: !x.done } : x)))}
+                />
+                <span>{st.text}</span>
+              </label>
+              <button
+                class="icon"
+                title="Löschen"
+                aria-label={`Unterschritt „${st.text}“ löschen`}
+                onClick={() => onChange(steps.filter((x) => x.id !== st.id))}
+              >
+                <Icon name="x" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {adding ? (
+        <form
+          class="row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (text.trim()) onChange([...steps, { id: crypto.randomUUID(), text: text.trim(), done: false }]);
+            setText('');
+          }}
+        >
+          <input
+            autoFocus
+            value={text}
+            onInput={(e) => setText(e.currentTarget.value)}
+            placeholder="Neuer Unterschritt"
+            aria-label={`Neuer Unterschritt zu „${milestone.text}“`}
+          />
+          <button type="submit">Hinzufügen</button>
+          <button type="button" class="link" onClick={() => setAdding(false)}>
+            Fertig
+          </button>
+        </form>
+      ) : (
+        <button class="link add-step" onClick={() => setAdding(true)}>
+          + Unterschritt
+        </button>
+      )}
+    </div>
   );
 }

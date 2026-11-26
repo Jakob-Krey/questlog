@@ -1,11 +1,12 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { createQuest, watchQuests, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
 import { reportError } from '../lib/notify';
-import { paceStatus, totalsByQuest, weeklyRatio, withRunningTimer } from '../lib/stats';
+import { paceStatus, timerElapsed, totalsByQuest, weeklyRatio, withRunningTimer } from '../lib/stats';
 import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
-import { formatDuration, formatHours, periodRange } from '../lib/time';
+import { formatClock, formatDuration, formatHours, periodRange } from '../lib/time';
 import type { ActiveTimer, Quest, Session } from '../lib/types';
+import Icon from './Icon';
 import Loading from './Loading';
 import Shell, { type PageProps } from './Shell';
 
@@ -17,6 +18,7 @@ function Overview({ uid, timer }: PageProps) {
   const now = useNow(30_000);
   const week = periodRange('week', now);
   const quests = useLive<Quest[]>((cb) => watchQuests(uid, cb), [uid]);
+  const [openId, setOpenId] = useState<string | null>(null);
   const sessions = useLive<Session[]>((cb) => watchSessionsInRange(uid, week.from, week.to, cb), [uid, week.from]);
 
   if (!quests || !sessions) return <Loading />;
@@ -35,6 +37,7 @@ function Overview({ uid, timer }: PageProps) {
     .sort((a, b) => sortKey(a) - sortKey(b));
   const paused = quests.filter((q) => q.status === 'paused' && q.id !== timer?.questId);
   const archived = quests.filter((q) => q.status === 'archived' && q.id !== timer?.questId);
+  const openQuest = quests.find((q) => q.id === openId) ?? null;
 
   return (
     <>
@@ -59,7 +62,11 @@ function Overview({ uid, timer }: PageProps) {
                 actualMs={totals.get(q.id) ?? 0}
                 elapsed={elapsed}
                 timer={timer}
-                onStart={() => startQuestTimer(uid, timer, q)}
+                onOpen={() => setOpenId(q.id)}
+                onStart={() => {
+                  startQuestTimer(uid, timer, q);
+                  setOpenId(q.id);
+                }}
                 onStop={() => timer && stopRunningTimer(uid, timer)}
                 onPause={() => timer && pauseQuestTimer(uid, timer)}
                 onResume={() => timer && resumeQuestTimer(uid, timer)}
@@ -68,6 +75,16 @@ function Overview({ uid, timer }: PageProps) {
           </div>
           <NewQuest uid={uid} />
         </>
+      )}
+
+      {openQuest && (
+        <QuestWindow
+          uid={uid}
+          quest={openQuest}
+          actualMs={totals.get(openQuest.id) ?? 0}
+          timer={timer}
+          onClose={() => setOpenId(null)}
+        />
       )}
 
       {paused.length > 0 && <QuestLinks title="Pausiert" quests={paused} />}
@@ -81,13 +98,14 @@ interface CardProps {
   actualMs: number;
   elapsed: number;
   timer: ActiveTimer | null;
+  onOpen: () => void;
   onStart: () => void;
   onStop: () => void;
   onPause: () => void;
   onResume: () => void;
 }
 
-export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop, onPause, onResume }: CardProps) {
+export function QuestCard({ quest, actualMs, elapsed, timer, onOpen, onStart, onStop, onPause, onResume }: CardProps) {
   const current = timer?.questId === quest.id;
   const paused = current && timer?.pausedAt !== null;
   const running = current && !paused;
@@ -99,10 +117,14 @@ export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop, on
   const nextIndex = quest.milestones.findIndex((m) => !m.done);
 
   return (
-    <article class={`card${running ? ' is-running' : ''}${paused ? ' is-paused' : ''}`}>
-      <a href={`/quest?id=${quest.id}`} class="card-title" title={quest.name}>
+    <article
+      class={`card${running ? ' is-running' : ''}${paused ? ' is-paused' : ''}`}
+      // Klick irgendwo auf die Karte öffnet das Fenster; Buttons behalten ihre eigene Aktion.
+      onClick={(e) => !(e.target as HTMLElement).closest('button') && onOpen()}
+    >
+      <button class="card-title" title={quest.name} onClick={onOpen}>
         {quest.name}
-      </a>
+      </button>
       {quest.goal && (
         <p class="goal" title={quest.goal}>
           {quest.goal}
@@ -160,12 +182,148 @@ export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop, on
             </span>
           </>
         ) : (
-          <button onClick={onStart} aria-label={`${timer ? 'Wechseln zu' : 'Start'} ${quest.name}`}>
-            {timer ? 'Wechseln' : 'Start'}
+          <button
+            onClick={onStart}
+            disabled={!!timer}
+            title={timer ? `Erst „${timer.title || 'Timer'}“ stoppen.` : undefined}
+            aria-label={`Start ${quest.name}`}
+          >
+            Start
           </button>
         )}
       </div>
     </article>
+  );
+}
+
+interface WindowProps {
+  uid: string;
+  quest: Quest;
+  actualMs: number;
+  timer: ActiveTimer | null;
+  onClose: () => void;
+}
+
+/**
+ * Schlichtes Fenster einer Quest: Ziel, Wochenstand und Meilensteine, nur zum Lesen.
+ * Bearbeiten gibt es nur, solange diese Quest nicht läuft.
+ */
+function QuestWindow({ uid, quest, actualMs, timer, onClose }: WindowProps) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const clock = useNow(1000);
+  useEffect(() => {
+    const d = ref.current;
+    if (d && !d.open) d.showModal();
+  }, []);
+
+  const current = timer?.questId === quest.id;
+  const paused = current && timer?.pausedAt !== null;
+  const goalMs = quest.weeklyHours * 3_600_000;
+  const leftMs = Math.max(0, goalMs - actualMs);
+
+  return (
+    <dialog
+      ref={ref}
+      class="quest-window"
+      aria-labelledby="quest-window-title"
+      onClose={onClose}
+      // Klick auf den abgedunkelten Hintergrund schließt.
+      onClick={(e) => e.target === ref.current && ref.current?.close()}
+    >
+      <div class="qw-inner">
+        <div class="qw-head">
+          <h2 id="quest-window-title">{quest.name}</h2>
+          <button class="icon" aria-label="Schließen" title="Schließen" onClick={() => ref.current?.close()}>
+            <Icon name="x" />
+          </button>
+        </div>
+
+        {current && timer && (
+          <p class={`qw-clock${paused ? ' is-paused' : ''}`}>
+            <span class={`dot${paused ? ' is-paused' : ''}`} aria-hidden="true" />
+            <span role="timer">{formatClock(timerElapsed(timer, clock))}</span>
+            {paused && <span class="muted"> pausiert</span>}
+          </p>
+        )}
+
+        <p class="qw-week">
+          {quest.weeklyHours > 0 ? (
+            <>
+              Diese Woche <strong>{formatDuration(actualMs)}</strong> von {formatHours(quest.weeklyHours)}
+              <span class="muted"> · {leftMs > 0 ? `noch ${formatDuration(leftMs)}` : 'Soll erfüllt'}</span>
+            </>
+          ) : (
+            <>Diese Woche <strong>{formatDuration(actualMs)}</strong></>
+          )}
+        </p>
+
+        {quest.goal && <p class="qw-goal">{quest.goal}</p>}
+
+        {quest.milestones.length > 0 && (
+          <section>
+            <h3>Meilensteine</h3>
+            <ol class="qw-milestones">
+              {quest.milestones.map((m) => (
+                <li key={m.id} class={m.done ? 'done' : ''}>
+                  <span class="qw-mark" aria-hidden="true">{m.done ? '✓' : ''}</span>
+                  <span>
+                    {m.text}
+                    {m.done && <span class="sr-only"> (erledigt)</span>}
+                    {/* Unterschritte nur bei offenen Meilensteinen, damit es übersichtlich bleibt. */}
+                    {!m.done && m.steps.length > 0 && (
+                      <ul class="qw-steps">
+                        {m.steps.map((st) => (
+                          <li key={st.id} class={st.done ? 'done' : ''}>
+                            <span class="qw-mark" aria-hidden="true">{st.done ? '✓' : ''}</span>
+                            <span>
+                              {st.text}
+                              {st.done && <span class="sr-only"> (erledigt)</span>}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        <div class="qw-actions">
+          {current && timer ? (
+            <>
+              <button onClick={() => (paused ? resumeQuestTimer(uid, timer) : pauseQuestTimer(uid, timer))}>
+                {paused ? 'Fortsetzen' : 'Pause'}
+              </button>
+              <button
+                class="danger"
+                onClick={() => {
+                  stopRunningTimer(uid, timer);
+                  ref.current?.close();
+                }}
+              >
+                Stopp
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                class="primary"
+                disabled={!!timer}
+                title={timer ? `Erst „${timer.title || 'Timer'}“ stoppen.` : undefined}
+                onClick={() => startQuestTimer(uid, timer, quest)}
+              >
+                Start
+              </button>
+              <a class="button" href={`/quest?id=${quest.id}`}>
+                Bearbeiten
+              </a>
+            </>
+          )}
+        </div>
+      </div>
+    </dialog>
   );
 }
 
