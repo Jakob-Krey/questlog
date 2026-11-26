@@ -846,52 +846,79 @@ main.focus {
   padding: 0;
   margin: 0;
 }
-.focus-milestones > li,
-.focus-steps > li {
-  display: flex;
+.focus-milestones > li {
+  padding: 3px 0;
+}
+/* Ganze Zeile ist der Schalter zum Abhaken, ohne Button-Optik. */
+.tick {
+  border: none;
+  background: none;
+  padding: 3px 0;
   gap: 10px;
-  padding: 5px 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  border-radius: 6px;
 }
-.focus-steps {
-  margin: 4px 0 0 -18px;
-  padding-left: 16px;
-  border-left: 2px solid var(--border);
-  font-size: 0.92rem;
+.tick.strong {
+  font-weight: 600;
 }
-.focus-steps > li {
-  padding: 2px 0;
-}
-.focus-page .mark {
+.tick .mark {
   flex: none;
-  width: 16px;
-  height: 16px;
-  margin-top: 4px;
-  border: 1.5px solid var(--muted);
-  border-radius: 50%;
-  font-size: 0.7rem;
-  line-height: 13px;
-  text-align: center;
-  color: var(--accent-text);
-}
-.focus-steps .mark {
   width: 18px;
   height: 18px;
   margin-top: 2px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
   font-size: 0.7rem;
+  font-weight: 400;
   line-height: 15px;
+  text-align: center;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-.focus-steps li.done > .mark {
-  color: var(--accent-text);
-}
-.focus-page li.done > .mark {
-  background: var(--accent);
+.tick:hover .mark {
   border-color: var(--accent);
 }
-.focus-page li.done > .mark + span {
+.tick.done .mark {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.tick.done .tick-text {
   color: var(--muted);
   text-decoration: line-through;
+}
+.focus-steps {
+  /* Linie verbindet die Schritte mit ihrem Meilenstein. */
+  margin: 2px 0 4px 8px;
+  padding-left: 18px;
+  border-left: 2px solid var(--border);
+  font-size: 0.95rem;
+}
+/* Auf breiten Bildschirmen laufen die Schritte als Reihe 1 → 2 → 3. */
+@media (min-width: 720px) {
+  .focus-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 4px;
+    margin: 2px 0 6px 28px;
+    padding-left: 0;
+    border-left: none;
+  }
+  .focus-steps > li {
+    display: flex;
+    align-items: center;
+  }
+  .focus-steps > li + li::before {
+    content: '';
+    width: 24px;
+    height: 2px;
+    margin: 0 10px;
+    background: var(--border);
+  }
 }
 .focus-actions {
   display: flex;

@@ -177,3 +177,12 @@
 - QuestEdit.tsx: Unterschritte heißen „Schritte“, sind nummeriert (1., 2., …) und per Pfeil hoch/runter sortierbar; Meilensteine bleiben ohne Nummer (unabhängig voneinander, jetzt `<ul>`).
 - QuestFocus.tsx: Schritte zeigen ihre Nummer im Kreis (erledigt: Häkchen); eine Linie verbindet sie mit dem Meilenstein (global.css). sw.js Cache v9, konzept.md angepasst.
 - Offen: Quest-Seite, gesperrtes Wechseln und Schritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 20:30 – Nummerierte Schritte live
+- Commit 31c3307 auf main gepusht; Deploy-Workflow erfolgreich.
+- Offen: Quest-Seite, gesperrtes Wechseln und Schritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 21:00 – Quest-Seite: Fortschrittsbalken, abhaken, Schritte als Reihe
+- QuestFocus.tsx: Fortschrittsbalken unter dem Wochenstand; Meilensteine (fett) und Schritte per Klick abhakbar (auch bei laufendem Timer), neue Komponente Tick.
+- global.css: Schritte ab 720 px Breite horizontal als Reihe mit Verbindungslinien, mobil weiter untereinander. Layout mit statischer Testseite geprüft. sw.js Cache v10, konzept.md angepasst.
+- Offen: Quest-Seite (Abhaken, Fortschritt, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

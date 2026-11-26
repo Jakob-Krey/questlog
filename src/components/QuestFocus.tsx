@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
-import { watchQuest, watchSessionsInRange } from '../lib/db';
+import { updateQuest, watchQuest, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
-import { timerElapsed, totalsByQuest, withRunningTimer } from '../lib/stats';
+import { reportError } from '../lib/notify';
+import { timerElapsed, totalsByQuest, weeklyRatio, withRunningTimer } from '../lib/stats';
 import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
 import { formatClock, formatDuration, formatHours, periodRange } from '../lib/time';
 import type { Quest, Session } from '../lib/types';
@@ -50,6 +51,20 @@ function QuestFocus({ uid, timer }: PageProps) {
   const paused = current && timer?.pausedAt !== null;
   const actualMs = totalsByQuest(withRunningTimer(sessions, timer, now), week.from, week.to).get(quest.id) ?? 0;
   const leftMs = Math.max(0, quest.weeklyHours * 3_600_000 - actualMs);
+  const ratio = weeklyRatio(actualMs, quest.weeklyHours);
+  const pct = ratio === null ? null : Math.round(ratio * 100);
+
+  // Abhaken geht auch während der Timer läuft; sonst ist hier nichts bearbeitbar.
+  const toggle = (milestoneId: string, stepId?: string) =>
+    updateQuest(uid, quest.id, {
+      milestones: quest.milestones.map((m) =>
+        m.id !== milestoneId
+          ? m
+          : stepId
+            ? { ...m, steps: m.steps.map((st) => (st.id === stepId ? { ...st, done: !st.done } : st)) }
+            : { ...m, done: !m.done },
+      ),
+    }).catch((e) => reportError('Abhaken', e));
 
   return (
     <article class="focus-page">
@@ -80,6 +95,19 @@ function QuestFocus({ uid, timer }: PageProps) {
           </>
         )}
       </p>
+      {ratio !== null && (
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label="Wochenfortschritt"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.min(100, pct ?? 0)}
+          aria-valuetext={`${formatDuration(actualMs)} von ${formatHours(quest.weeklyHours)}, ${pct} %`}
+        >
+          <div style={{ width: `${Math.min(1, ratio) * 100}%` }} />
+        </div>
+      )}
 
       {quest.goal && <p class="focus-goal">{quest.goal}</p>}
 
@@ -88,31 +116,18 @@ function QuestFocus({ uid, timer }: PageProps) {
           <h2>Meilensteine</h2>
           <ul class="focus-milestones">
             {quest.milestones.map((m) => (
-              <li key={m.id} class={m.done ? 'done' : ''}>
-                <span class="mark" aria-hidden="true">
-                  {m.done ? '✓' : ''}
-                </span>
-                <span>
-                  {m.text}
-                  {m.done && <span class="sr-only"> (erledigt)</span>}
-                  {/* Unterschritte nur bei offenen Meilensteinen, damit es übersichtlich bleibt. */}
-                  {!m.done && m.steps.length > 0 && (
-                    <ol class="focus-steps">
-                      {m.steps.map((st, i) => (
-                        <li key={st.id} class={st.done ? 'done' : ''}>
-                          {/* Offene Schritte zeigen ihre Nummer, erledigte ein Häkchen. */}
-                          <span class="mark" aria-hidden="true">
-                            {st.done ? '✓' : i + 1}
-                          </span>
-                          <span>
-                            {st.text}
-                            {st.done && <span class="sr-only"> (erledigt)</span>}
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </span>
+              <li key={m.id}>
+                <Tick done={m.done} label={m.text} strong onToggle={() => toggle(m.id)} />
+                {/* Schritte nur bei offenen Meilensteinen, damit es übersichtlich bleibt. */}
+                {!m.done && m.steps.length > 0 && (
+                  <ol class="focus-steps" aria-label={`Schritte zu „${m.text}“`}>
+                    {m.steps.map((st, i) => (
+                      <li key={st.id}>
+                        <Tick done={st.done} label={st.text} num={i + 1} onToggle={() => toggle(m.id, st.id)} />
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </li>
             ))}
           </ul>
@@ -164,5 +179,29 @@ function QuestFocus({ uid, timer }: PageProps) {
         </div>
       )}
     </article>
+  );
+}
+
+/** Abhakbarer Eintrag: Kreis (bei Schritten mit Nummer) und Text. */
+function Tick({
+  done,
+  label,
+  num,
+  strong,
+  onToggle,
+}: {
+  done: boolean;
+  label: string;
+  num?: number;
+  strong?: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button class={`tick${done ? ' done' : ''}${strong ? ' strong' : ''}`} aria-pressed={done} onClick={onToggle}>
+      <span class="mark" aria-hidden="true">
+        {done ? '✓' : (num ?? '')}
+      </span>
+      <span class="tick-text">{label}</span>
+    </button>
   );
 }

@@ -24,7 +24,7 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 
 **Übersicht & Auswertung**
 - Übersicht: nur die aktiven Quests als Karten mit Fortschrittsbalken (Ist-Stunden dieser Woche vs. Wochen-Soll; Balken endet bei 100 %, die Prozentzahl zählt darüber hinaus) und Start-/Pause-/Stopp-Button, dazu „Neue Quest“. Klick auf eine Karte oder auf Start öffnet die Quest-Seite (Start startet zugleich die Zeit). Die Karten zeigen keine Meilensteine.
-- Quest-Seite: ablenkungsfrei ohne Navigation und Timer-Leiste, nur Anzeige von Ziel, Wochenstand (Ist, Soll, noch übrig), Meilensteinen mit Unterschritten und ggf. laufender Uhr mit Notiz, Pause und Stopp – nichts abhakbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (eigene Seite für Quest-Daten und Meilensteine). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
+- Quest-Seite: ablenkungsfrei ohne Navigation und Timer-Leiste, Ziel, Wochenstand (Ist, Soll, noch übrig) mit Fortschrittsbalken, Meilensteine (fett) mit ihren Schritten (auf breiten Bildschirmen als Reihe 1 → 2 → 3, mobil untereinander) und ggf. laufende Uhr mit Notiz, Pause und Stopp. Meilensteine und Schritte lassen sich dort abhaken, auch während der Timer läuft; sonst nichts bearbeitbar. Läuft die Quest nicht, gibt es dort Start und „Bearbeiten“ (eigene Seite für Quest-Daten und Meilensteine). Kein Wochenkopf, keine Gesamtsumme, kein Reflexions-Hinweis, kein Hinweis zum Stand gegen den Wochenplan (Entscheidung 2026-11-26).
 - Auswertung: Zeit pro Quest für Woche / Monat / Quartal; ältere freie Sitzungen erscheinen, falls vorhanden, gesammelt als „Ohne Quest“.
 
 **Wochenreflexion**
