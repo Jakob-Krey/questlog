@@ -168,3 +168,12 @@
 - Bearbeiten zieht nach /bearbeiten (QuestDetail.tsx → QuestEdit.tsx). Overview.tsx: Dialog entfernt, Karte öffnet /quest, Start öffnet /quest?…&start=1 und startet dort (damit der Seitenwechsel den Schreibvorgang nicht abbricht); Meilenstein-Zeile auf den Karten entfällt.
 - global.css, sw.js (Cache v8, /bearbeiten im Shell-Cache), konzept.md angepasst.
 - Offen: Quest-Seite, gesperrtes Wechseln und Unterschritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 20:10 – Quest-Seite live
+- Commit cce2d6a auf main gepusht; Deploy-Workflow erfolgreich.
+- Offen: Quest-Seite, gesperrtes Wechseln und Unterschritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 20:25 – Schritte nummeriert und sortierbar
+- QuestEdit.tsx: Unterschritte heißen „Schritte“, sind nummeriert (1., 2., …) und per Pfeil hoch/runter sortierbar; Meilensteine bleiben ohne Nummer (unabhängig voneinander, jetzt `<ul>`).
+- QuestFocus.tsx: Schritte zeigen ihre Nummer im Kreis (erledigt: Häkchen); eine Linie verbindet sie mit dem Meilenstein (global.css). sw.js Cache v9, konzept.md angepasst.
+- Offen: Quest-Seite, gesperrtes Wechseln und Schritte auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

@@ -86,7 +86,7 @@ function QuestFocus({ uid, timer }: PageProps) {
       {quest.milestones.length > 0 && (
         <section>
           <h2>Meilensteine</h2>
-          <ol class="focus-milestones">
+          <ul class="focus-milestones">
             {quest.milestones.map((m) => (
               <li key={m.id} class={m.done ? 'done' : ''}>
                 <span class="mark" aria-hidden="true">
@@ -97,11 +97,12 @@ function QuestFocus({ uid, timer }: PageProps) {
                   {m.done && <span class="sr-only"> (erledigt)</span>}
                   {/* Unterschritte nur bei offenen Meilensteinen, damit es übersichtlich bleibt. */}
                   {!m.done && m.steps.length > 0 && (
-                    <ul class="focus-steps">
-                      {m.steps.map((st) => (
+                    <ol class="focus-steps">
+                      {m.steps.map((st, i) => (
                         <li key={st.id} class={st.done ? 'done' : ''}>
+                          {/* Offene Schritte zeigen ihre Nummer, erledigte ein Häkchen. */}
                           <span class="mark" aria-hidden="true">
-                            {st.done ? '✓' : ''}
+                            {st.done ? '✓' : i + 1}
                           </span>
                           <span>
                             {st.text}
@@ -109,12 +110,12 @@ function QuestFocus({ uid, timer }: PageProps) {
                           </span>
                         </li>
                       ))}
-                    </ul>
+                    </ol>
                   )}
                 </span>
               </li>
             ))}
-          </ol>
+          </ul>
         </section>
       )}
 

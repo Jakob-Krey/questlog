@@ -599,7 +599,23 @@ header.top {
   gap: 8px;
 }
 .steps {
-  margin-left: 28px;
+  /* Linie verbindet die Schritte sichtbar mit ihrem Meilenstein. */
+  margin: 4px 0 0 8px;
+  padding-left: 18px;
+  border-left: 2px solid var(--border);
+}
+.step-list li {
+  gap: 8px;
+}
+.step-num {
+  flex: none;
+  min-width: 1.4em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+.step-list .check {
+  flex: 1;
 }
 .steps ul.plain {
   margin: 4px 0 0;
@@ -837,7 +853,9 @@ main.focus {
   padding: 5px 0;
 }
 .focus-steps {
-  margin-top: 2px;
+  margin: 4px 0 0 -18px;
+  padding-left: 16px;
+  border-left: 2px solid var(--border);
   font-size: 0.92rem;
 }
 .focus-steps > li {
@@ -856,11 +874,16 @@ main.focus {
   color: var(--accent-text);
 }
 .focus-steps .mark {
-  width: 12px;
-  height: 12px;
-  margin-top: 5px;
-  font-size: 0.55rem;
-  line-height: 9px;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  font-size: 0.7rem;
+  line-height: 15px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.focus-steps li.done > .mark {
+  color: var(--accent-text);
 }
 .focus-page li.done > .mark {
   background: var(--accent);

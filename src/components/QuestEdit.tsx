@@ -204,7 +204,7 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
     <section class="panel">
       <h2>Meilensteine</h2>
       {list.length === 0 && <p class="muted">Noch keine Meilensteine.</p>}
-      <ol class="milestones">
+      <ul class="milestones">
         {list.map((m, i) => (
           <li key={m.id} class={m.done ? 'done' : ''}>
             <div class="milestone-row">
@@ -244,7 +244,7 @@ function Milestones({ uid, quest }: { uid: string; quest: Quest }) {
             <Steps milestone={m} onChange={(steps) => patch(m.id, (x) => ({ ...x, steps }))} />
           </li>
         ))}
-      </ol>
+      </ul>
       <form
         class="row"
         onSubmit={(e) => {
@@ -271,12 +271,23 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
   const [adding, setAdding] = useState(false);
   const [text, setText] = useState('');
   const steps = milestone.steps;
+  const move = (i: number, delta: number) => {
+    const j = i + delta;
+    if (j < 0 || j >= steps.length) return;
+    const next = steps.slice();
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
   return (
     <div class="steps">
       {steps.length > 0 && (
-        <ul class="plain">
-          {steps.map((st) => (
+        // Unterschritte sind eine Reihenfolge (1, 2, 3 …) auf dem Weg zum Meilenstein.
+        <ol class="plain step-list" aria-label={`Schritte zu „${milestone.text}“`}>
+          {steps.map((st, i) => (
             <li key={st.id} class={st.done ? 'done' : ''}>
+              <span class="step-num" aria-hidden="true">
+                {i + 1}.
+              </span>
               <label class="check">
                 <input
                   type="checkbox"
@@ -285,17 +296,37 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
                 />
                 <span>{st.text}</span>
               </label>
-              <button
-                class="icon"
-                title="Löschen"
-                aria-label={`Unterschritt „${st.text}“ löschen`}
-                onClick={() => onChange(steps.filter((x) => x.id !== st.id))}
-              >
-                <Icon name="x" />
-              </button>
+              <span class="row tight">
+                <button
+                  class="icon"
+                  title="Nach oben"
+                  aria-label={`Schritt „${st.text}“ nach oben`}
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  <Icon name="arrow-up" />
+                </button>
+                <button
+                  class="icon"
+                  title="Nach unten"
+                  aria-label={`Schritt „${st.text}“ nach unten`}
+                  disabled={i === steps.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  <Icon name="arrow-down" />
+                </button>
+                <button
+                  class="icon"
+                  title="Löschen"
+                  aria-label={`Schritt „${st.text}“ löschen`}
+                  onClick={() => onChange(steps.filter((x) => x.id !== st.id))}
+                >
+                  <Icon name="x" />
+                </button>
+              </span>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
       {adding ? (
         <form
@@ -310,8 +341,8 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
             autoFocus
             value={text}
             onInput={(e) => setText(e.currentTarget.value)}
-            placeholder="Neuer Unterschritt"
-            aria-label={`Neuer Unterschritt zu „${milestone.text}“`}
+            placeholder={`Schritt ${steps.length + 1}`}
+            aria-label={`Neuer Schritt zu „${milestone.text}“`}
           />
           <button type="submit">Hinzufügen</button>
           <button type="button" class="link" onClick={() => setAdding(false)}>
@@ -320,7 +351,7 @@ function Steps({ milestone, onChange }: { milestone: Milestone; onChange: (steps
         </form>
       ) : (
         <button class="link add-step" onClick={() => setAdding(true)}>
-          + Unterschritt
+          + Schritt
         </button>
       )}
     </div>
