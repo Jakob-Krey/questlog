@@ -195,3 +195,12 @@
 - QuestFocus.tsx, QuestEdit.tsx: Schritte werden umgekehrt angezeigt (`<ol reversed>`): Schritt 1 ganz unten, der Meilenstein ganz oben. Gespeicherte Reihenfolge bleibt unverändert; die Pfeile auf der Bearbeiten-Seite wirken optisch (oben = höhere Nummer), „+ Schritt“ steht jetzt über den Schritten.
 - global.css: horizontale Desktop-Reihe wieder entfernt (Wunsch Jakob). sw.js Cache v11, konzept.md angepasst.
 - Offen: Quest-Seite (Abhaken, Fortschritt, Reihenfolge, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 21:20 – Schritte von unten nach oben live
+- Commit c54486d auf main gepusht; Deploy-Workflow erfolgreich.
+- Offen: Quest-Seite (Abhaken, Fortschritt, Reihenfolge, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 22:47 – Schritt-Linie zeigt Fortschritt
+- QuestFocus.tsx, global.css: Die Linie neben den Schritten füllt sich von unten anteilig zu den erledigten Schritten (CSS-Variable `--done`, per `@property` sanft animiert). Mit statischer Testseite geprüft.
+- sw.js Cache v12, konzept.md ergänzt.
+- Offen: Quest-Seite (Abhaken, Fortschritt, Reihenfolge, mobil) und gesperrtes Wechseln auf der Live-Seite testen; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

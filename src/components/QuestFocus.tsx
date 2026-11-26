@@ -121,7 +121,13 @@ function QuestFocus({ uid, timer }: PageProps) {
                 {/* Schritte nur bei offenen Meilensteinen, damit es übersichtlich bleibt. */}
                 {!m.done && m.steps.length > 0 && (
                   // Aufstieg zum Ziel: Schritt 1 steht ganz unten, der Meilenstein ganz oben.
-                  <ol reversed class="focus-steps" aria-label={`Schritte zu „${m.text}“`}>
+                  <ol
+                    reversed
+                    class="focus-steps"
+                    aria-label={`Schritte zu „${m.text}“`}
+                    // Seitenstreifen füllt sich von unten anteilig zu den erledigten Schritten.
+                    style={{ '--done': `${(m.steps.filter((st) => st.done).length / m.steps.length) * 100}%` }}
+                  >
                     {m.steps
                       .map((st, i) => ({ st, n: i + 1 }))
                       .reverse()

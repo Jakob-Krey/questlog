@@ -11,7 +11,7 @@ Persönliches Zeittracking als Web-App/PWA für Mac und Handy. Quests sind SMART
 **Quests**
 - Name, SMART-Ziel (Text), Wochenstunden-Soll, Status aktiv / pausiert / archiviert. Kein Enddatum.
 - Anlegen, bearbeiten, pausieren, archivieren. Archivierte Quests verschwinden aus der Übersicht, ihre Zeiten bleiben in der Auswertung.
-- Meilensteine pro Quest: anlegen, umsortieren, abhaken, löschen – ohne Enddatum. Meilensteine sind unabhängig voneinander (keine Nummerierung). Jeder Meilenstein kann Schritte haben (eine Ebene): eine nummerierte Reihenfolge 1, 2, 3 … zum Erreichen des Meilensteins, überall von unten nach oben angezeigt (Schritt 1 ganz unten, der Meilenstein als Ziel ganz oben); anlegen, umsortieren, abhaken, löschen (Entscheidung 2026-11-26).
+- Meilensteine pro Quest: anlegen, umsortieren, abhaken, löschen – ohne Enddatum. Meilensteine sind unabhängig voneinander (keine Nummerierung). Jeder Meilenstein kann Schritte haben (eine Ebene): eine nummerierte Reihenfolge 1, 2, 3 … zum Erreichen des Meilensteins, überall von unten nach oben angezeigt (Schritt 1 ganz unten, der Meilenstein als Ziel ganz oben); auf der Quest-Seite füllt sich die Linie neben den Schritten von unten anteilig zu den erledigten Schritten; anlegen, umsortieren, abhaken, löschen (Entscheidung 2026-11-26).
 
 **Timer**
 - Es läuft immer nur ein Timer. Solange er läuft oder pausiert ist, lassen sich andere Quests nicht starten; gewechselt wird nur per Stopp und neuem Start (Entscheidung 2026-11-26, ersetzt das automatische Wechseln).

@@ -890,12 +890,24 @@ main.focus {
   color: var(--muted);
   text-decoration: line-through;
 }
+/* Registriert, damit sich der Füllstand sanft ändert. */
+@property --done {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
 .focus-steps {
-  /* Linie verbindet die Schritte mit ihrem Meilenstein. */
+  /* Linie verbindet die Schritte mit dem Meilenstein und füllt sich von unten (Schritt 1). */
   margin: 2px 0 4px 8px;
-  padding-left: 18px;
-  border-left: 2px solid var(--border);
+  padding-left: 20px;
   font-size: 0.95rem;
+  background: linear-gradient(to top, var(--accent) var(--done), var(--border) var(--done)) left / 2px 100% no-repeat;
+  transition: --done 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-steps {
+    transition: none;
+  }
 }
 .focus-actions {
   display: flex;
