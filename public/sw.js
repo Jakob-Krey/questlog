@@ -1,6 +1,6 @@
 // Service Worker: App-Shell offline verfügbar machen.
 // Firebase-/Google-Anfragen (andere Origins) werden nie abgefangen.
-const CACHE = 'questlog-v5';
+const CACHE = 'questlog-v6';
 const SHELL = ['/', '/quest', '/sitzungen', '/auswertung', '/reflexion', '/einstellungen', '/manifest.webmanifest', '/icons/icon.svg'];
 
 self.addEventListener('install', (event) => {

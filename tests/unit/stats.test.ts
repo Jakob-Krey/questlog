@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { behindMs, paceStatus, timerElapsed, totalsByQuest, weeklyRatio, withRunningTimer } from '../../src/lib/stats';
+import { paceStatus, timerElapsed, totalsByQuest, weeklyRatio, withRunningTimer } from '../../src/lib/stats';
 import { HOUR, daysLeftInWeek, formatHours } from '../../src/lib/time';
 
 describe('Wochenfortschritt', () => {
@@ -15,11 +15,6 @@ describe('Wochenfortschritt', () => {
     expect(paceStatus(2 * HOUR, 10, 0.5)).toBe('behind');
     expect(paceStatus(0, 10, 0)).toBe('on-track');
     expect(paceStatus(1 * HOUR, 0, 0.5)).toBeNull();
-  });
-
-  it('berechnet den Rückstand', () => {
-    expect(behindMs(2 * HOUR, 10, 0.5)).toBe(3 * HOUR);
-    expect(behindMs(8 * HOUR, 10, 0.5)).toBe(0);
   });
 });
 

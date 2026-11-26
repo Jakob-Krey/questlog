@@ -63,9 +63,3 @@ export function paceStatus(actualMs: number, weeklyHours: number, elapsedFractio
   if (ratio >= 1) return 'done';
   return ratio >= Math.min(1, Math.max(0, elapsedFraction)) ? 'on-track' : 'behind';
 }
-
-/** Rückstand in ms gegenüber dem gleichmäßigen Wochenplan (0, wenn im Plan). */
-export function behindMs(actualMs: number, weeklyHours: number, elapsedFraction: number): number {
-  const expected = weeklyHours * 3_600_000 * Math.min(1, Math.max(0, elapsedFraction));
-  return Math.max(0, expected - actualMs);
-}

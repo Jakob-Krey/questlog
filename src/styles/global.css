@@ -401,8 +401,7 @@ header.top {
   margin-left: 10px;
   white-space: nowrap;
 }
-.pct.pace-done,
-.meta.pace-done {
+.pct.pace-done {
   color: var(--ok);
 }
 .pct.pace-behind {

@@ -142,3 +142,13 @@
 ## 2026-11-24 18:02 – skills-lock.json ins Repo
 - skills-lock.json committet, damit die ignorierten Agent-Skills (Firebase, Impeccable) auf einem anderen Rechner oder nach neuem Klonen wiederhergestellt werden können. Die Datei enthält nur Quelle, Pfad und Hash je Skill, keine Geheimnisse.
 - Offen: Ende-zu-Ende-Test Kalender-Sync auf der Live-Seite; Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-24 18:10 – Kalender-Sync live bestätigt
+- Ende-zu-Ende-Test auf der Live-Seite durch Jakob erfolgreich; keine Code-Änderung.
+- Offen: Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)
+
+## 2026-11-26 19:26 – Plan-Hinweis von den Quest-Karten entfernt
+- Overview.tsx: Zeile „… hinter Plan / Im Plan / Soll erfüllt / Kein Wochen-Soll“ entfällt komplett; die Prozentzahl bleibt farbig (erfüllt/hinterher).
+- stats.ts: ungenutztes behindMs samt Test entfernt; global.css: .meta.pace-done entfernt; sw.js Cache v6.
+- konzept.md: „Stand gegen den Wochenplan“ gestrichen (Entscheidung 2026-11-26, Wunsch Jakob).
+- Offen: Google-Popup in der installierten iOS-PWA prüfen. (Ältere offene Punkte nicht geprüft, da CHANGELOG nicht gelesen wird.)

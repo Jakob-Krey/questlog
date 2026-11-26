@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { createQuest, watchQuests, watchSessionsInRange } from '../lib/db';
 import { useLive, useNow } from '../lib/hooks';
 import { reportError } from '../lib/notify';
-import { behindMs, paceStatus, totalsByQuest, weeklyRatio, type Pace, withRunningTimer } from '../lib/stats';
+import { paceStatus, totalsByQuest, weeklyRatio, withRunningTimer } from '../lib/stats';
 import { pauseQuestTimer, resumeQuestTimer, startQuestTimer, stopRunningTimer } from '../lib/timerActions';
 import { formatDuration, formatHours, periodRange } from '../lib/time';
 import type { ActiveTimer, Quest, Session } from '../lib/types';
@@ -76,8 +76,6 @@ function Overview({ uid, timer }: PageProps) {
   );
 }
 
-const PACE_TEXT: Record<Pace, string> = { done: 'Soll erfüllt', 'on-track': 'Im Plan', behind: '' };
-
 interface CardProps {
   quest: Quest;
   actualMs: number;
@@ -99,13 +97,6 @@ export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop, on
   const hours = formatHours(quest.weeklyHours);
   const doneCount = quest.milestones.filter((m) => m.done).length;
   const nextIndex = quest.milestones.findIndex((m) => !m.done);
-
-  const paceText =
-    pace === null
-      ? 'Kein Wochen-Soll'
-      : pace === 'behind'
-        ? `${formatDuration(behindMs(actualMs, quest.weeklyHours, elapsed))} hinter Plan`
-        : PACE_TEXT[pace];
 
   return (
     <article class={`card${running ? ' is-running' : ''}${paused ? ' is-paused' : ''}`}>
@@ -144,7 +135,6 @@ export function QuestCard({ quest, actualMs, elapsed, timer, onStart, onStop, on
         </div>
       )}
 
-      <p class={`meta pace-${pace}`}>{paceText}</p>
       {quest.milestones.length > 0 && (
         <p class="meta next-milestone" title={nextIndex >= 0 ? quest.milestones[nextIndex].text : undefined}>
           {nextIndex >= 0
